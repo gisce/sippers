@@ -30,14 +30,6 @@ class Parsejador(object):
         arxiuex.close()
         return {}
 
-    # def extractzips(self, path):
-    #     head, tail = os.path.split(path)
-    #     self.extract_file(tail, head)
-    #
-    #     for fitxer in os.listdir("./"):
-    #         self.detecta_conf(head + '/' + fitxer)
-    #     return {}
-
     def afagaarxius(self, path):
         llista_arxius = []
         for fitxer in os.listdir(path):
@@ -63,6 +55,7 @@ class Parsejador(object):
             pattern = conf.get('parser', 'pattern')
             delimiter = conf.get('parser', 'delimiter')
             classe = conf.get('parser', 'class')
+            contador = conf.get('parser', 'contador')
 
             if re.match(pattern, tail):
                 print "pattern {}".format(pattern)
@@ -86,7 +79,7 @@ class Parsejador(object):
                     rutacompleta = directori + pathex + numseg + '/SORT/' + fitex
                     print "rutacompleta:{}".format(rutacompleta)
                     dictres[rutacompleta] = [headers, descartar, delimiter,
-                                             classe]
+                                             classe, contador]
             else:
                 print "no fa match"
         if not headers:
@@ -99,18 +92,24 @@ class Parsejador(object):
         collection.insert(documents)
         return {}
 
-    def importamongo_ps(self, filecodificat, midafitxer, collection, contador,
-                        db, valors):
-
+    def importamongo(self, filecodificat, midafitxer, db, valors):
         # Log per els errors de lectura
-        flog = open("log_ps.txt", "w")
+        flog = open("log.txt", "w")
         # Camps del conf
         headerss = valors[0]
         headers_conf = [h[0] for h in headerss]
+        valores = [h[1] for h in headerss]
+        vals = [v.split() for v in valores]
+        #Només utilitzare aquests valors en cas de que hi hagin posicions
+        if len(vals[0]) == 2:
+            vals_tipus = [v[0] for v in vals]
+            vals_apa = [v[1] for v in vals]
 
         descartar = valors[1]
         delimiter = valors[2]
         classe = valors[3]
+        contador = valors[4]
+
         # Contador de linies
         count = 0
         # Per calcular la progressió
@@ -120,46 +119,37 @@ class Parsejador(object):
         # Número de camps del header
         len_header = str(len(headerss))
 
+        # Afago la coleccio que vull
+        if classe == 'giscedata_sips_ps':
+            collection = db.giscedata_sips_ps
+        elif classe == 'giscedata_sips_consums':
+            collection = db.giscedata_sips_consums
+        else:
+            print "Error, no es troba la collection al conf"
+
         # Comprovo que la collecció estigui creada, si no la creo
-        if not db['counters'].count():
-            db['counters'].save({"_id": "giscedata_sips_ps",
-                                 "counter": 1})
+        if not db[contador].count():
+            db[contador].save({"_id": classe, "counter": 1})
 
+        # llegeixo per tot el fitxer
         while filecodificat.tell() < midafitxer:
-
-            #import pdb; pdb.set_trace()
             linia = filecodificat.readline()
             slinia = tuple(linia.split(delimiter))
             slinia = map(lambda s: s.strip(), slinia)
 
-            # print 'length slinia:{} length headers:{}'.format(len(slinia),
-            #                                                   len(headerss))
-            #print 'db:{}'.format(db)
-            #Add incremental id to store vals
-            counter = db['counters'].find_and_modify(
-                {'_id': classe},
-                {'$inc': {'counter': 1}})
-            #print 'counter ps: {}'.format(counter)
-
             # Comprovar que el número de camps es el mateix que la del header
-            if len(slinia) != int(len_header):
-                flog.write('\nError: ' + 'length:' + str(len(slinia)) +
-                           'Correcte :' + len_header + '\n' +
-                           'numero de linia: ' + str(count) + "\n")
-            else:
-                #print slinia
+            if len(slinia) == int(len_header):
+                # creo el dataset amb els headers del conf
                 data = tablib.Dataset(slinia, headers=headers_conf)
-
                 # Borro les claus que em surt l'arxiu de configuracio
                 for d in descartar:
                     del data[d]
-
                 # Millores: posar la cadena de lambda al fitxer de conf
                 for h in headerss:
                     if h[1] == 'float':
                         data.add_formatter(h[0], lambda a: a and float(a) or 0)
                     if h[1] == 'integer':
-                        print "h[1]:{}, h[0]:{}".format(h[1], h[0])
+                        #print "h[1]:{}, h[0]:{}".format(h[1], h[0])
                         data.add_formatter(h[0],
                                            lambda a:
                                            a and int(a.replace(',', '')) or 0)
@@ -167,120 +157,75 @@ class Parsejador(object):
                     #         camp per boolean
                     if h[1] == 'long':
                         data.add_formatter(h[0], lambda a: a and long(a) or 0)
-
+                # creo el dict anomenat document per insertar al mongo
                 document = data.dict[0]
 
-                # Update del index
-                #print counter
-                document.update(
-                    {'id': counter['counter'],
-                     'create_uid': user,
-                     'create_date': datetime.now()}
-                )
-
-                # Inserto el document al mongodb
-                self.insert_mongo(document, collection)
-
-            count += 1
-            sumatori += len(linia)
-            tantpercent = float(sumatori) / midafitxer * 100.0
-            print "Completat: {} %".format(tantpercent)
-
-        print "Numero de linies: {}".format(count)
-        flog.close()
-
-        return {}
-
-    def importamongo_consums(self, filecodificat, midafitxer, collection,
-                             contador, db, valors):
-
-        # Log per els errors de lectura
-        flog = open("log_consums.txt", "w")
-        # Camps del conf
-        headerss = valors[0]
-        headers_conf = [h[0] for h in headerss]
-
-        descartar = valors[1]
-        delimiter = valors[2]
-        classe = valors[3]
-        # Contador de linies
-        count = 0
-        # Per calcular la progressió
-        sumatori = 0
-        #USUARI DE TEST QUE FEM SERVIR
-        user = 'default'
-        # Número de camps del header
-        len_header = str(len(headerss))
-
-        # Comprovo que la collecció estigui creada, si no la creo
-        if not db['counters_con'].count():
-            db['counters_con'].save({"_id": "giscedata_sips_consums",
-                                     "counter": 1})
-
-        while filecodificat.tell() < midafitxer:
-
-            #import pdb; pdb.set_trace()
-            linia = filecodificat.readline()
-            slinia = tuple(linia.split(delimiter))
-            slinia = map(lambda s: s.strip(), slinia)
-
-            #print "cups: {}".format(slinia[0])
-            cups = slinia[0]
-
-            # print 'length slinia:{} length headers:{}'.format(len(slinia),
-            #                                                   len(headerss))
-
-            # Menys el primer element (cups) amb la long del header menys 1
-            for i in range(1, len(slinia), int(len_header)-1):
-                data = slinia[i:i+int(len_header)-1]
-                data.insert(0, cups)
-
-                #print "data: {}, len_data: {}, len_headers: {}".format(
-                #    data, len(data), len(headerss))
-                data = tablib.Dataset(data, headers=headers_conf)
-
-                # Borro les claus que em surt l'arxiu de configuracio
-                for d in descartar:
-                    del data[d]
-
-                # Millores: posar la cadena de lambda al fitxer de conf
-                for h in headerss:
-                    if h[1] == 'float':
-                        data.add_formatter(h[0], lambda a: a and float(a) or 0)
-                    if h[1] == 'integer':
-                        data.add_formatter(h[0], lambda a: a and int(a) or 0)
-                    # TO DO : afegir format datetime
-                    # if h[1] == 'datetime':
-                    #     data.add_formatter(
-                    #         h[0], lambda a: a and datetime.strptime
-                    # (a, '%Y%m%d')
-                    #         or None)
-                    if h[1] == 'long':
-                        data.add_formatter(h[0], lambda a: a and long(a) or 0)
-
-                document = data.dict[0]
-
-                #id incremental
-                counter = db['counters_con'].find_and_modify(
+                #Add incremental id to store vals
+                counter = db[contador].find_and_modify(
                     {'_id': classe},
                     {'$inc': {'counter': 1}})
 
                 # Update del index
-                #print counter
                 document.update(
                     {'id': counter['counter'],
                      'create_uid': user,
                      'create_date': datetime.now()}
                 )
 
-                # Inserto el document al mongodb
                 self.insert_mongo(document, collection)
+            elif len(slinia) != int(len_header) and len(vals[0]) < 2:
+                print "Error en la dimensió de la linea, no coincideix amb" \
+                      " la dimensió dels camps del fitxer de configuració."
+                print "long de slinia: {} long de headerss: {}".format(
+                    len(slinia), len(headerss)
+                )
+                print "slinia:{}".format(slinia)
+                print "headerss:{}".format(headerss)
+            else:
+                contadorlinia = 0
+                position = [eval(num, {"n": contadorlinia}) for num in vals_apa]
 
-            # Comprovar que el número de camps es el mateix que la del header
-            if len(slinia) != ((int(len_header)-1)*12)+1:
-                flog.write('\nError: ' + 'length:' + str(len(slinia)) +
-                           ' Correcte :' + str(int(len_header)*12) + '\n' +
-                           'numero de linia: ' + str(count) + "\n")
+                for i in range(0, len(slinia), len(position)):
+                    data = [slinia[p] for p in position]
+                    data = tablib.Dataset(data, headers=headers_conf)
+
+                    # Borro les claus que em surt l'arxiu de configuracio
+                    for d in descartar:
+                        del data[d]
+
+                    # Millores: posar la cadena de lambda al fitxer de conf
+                    for h, v in zip(headerss, vals_tipus):
+                        if v == 'float':
+                            data.add_formatter(h[0],
+                                               lambda a: a and float(a) or 0)
+                        if v == 'integer':
+                            data.add_formatter(h[0],
+                                               lambda a: a and int(a) or 0)
+                        # TO DO : afegir format datetime
+                        if v == 'long':
+                            data.add_formatter(h[0],
+                                               lambda a: a and long(a) or 0)
+
+                    document = data.dict[0]
+                    #id incremental
+                    counter = db[contador].find_and_modify(
+                        {'_id': classe},
+                        {'$inc': {'counter': 1}})
+
+                    # Update del index
+                    #print counter
+                    document.update(
+                        {'id': counter['counter'],
+                         'create_uid': user,
+                         'create_date': datetime.now()}
+                    )
+
+                    # Inserto el document al mongodb
+                    self.insert_mongo(document, collection)
+
+                    contadorlinia += 1
+                    position = [eval(num, {"n": contadorlinia}) for num in
+                                vals_apa]
 
             count += 1
             sumatori += len(linia)
@@ -289,16 +234,17 @@ class Parsejador(object):
 
         print "Numero de linies: {}".format(count)
         flog.close()
+
         return {}
 
     def parser_sips_endesa(self, arxiu_conf):
 
         arxiu, valors = arxiu_conf.popitem()
 
-        print arxiu
+        #print arxiu
         filecodificat = codecs.open(arxiu, "r", "iso-8859-15")
         midafitxer = os.stat(arxiu).st_size
-        print 'Mida del fitxer: {}'.format(midafitxer)
+        #print 'Mida del fitxer: {}'.format(midafitxer)
 
         # Connectar i escollir la bbdd
         client = MongoClient()
@@ -306,21 +252,7 @@ class Parsejador(object):
         db = client.openerp
         #db = client.test_database
 
-        # Segons el model del config
-        classe = valors[3]
-        if classe == 'giscedata_sips_ps':
-            collection = db.giscedata_sips_ps
-            contador = 'counters'
-            self.importamongo_ps(filecodificat, midafitxer, collection,
-                                 contador, db, valors)
-
-        elif classe == 'giscedata_sips_consums':
-            collection = db.giscedata_sips_consums
-            contador = 'counters_con'
-            self.importamongo_consums(filecodificat, midafitxer, collection,
-                                      contador, db, valors)
-        else:
-            print "Error"
+        self.importamongo(filecodificat, midafitxer, db, valors)
 
         #print data.json
         filecodificat.close()
@@ -345,7 +277,7 @@ class Parsejador(object):
         llista_arxius = self.afagaarxius(directori)
         print "llista_arxius: {}".format(llista_arxius)
         for arxiu in llista_arxius:
-            print "Arxiu: {}".format(arxiu)
+            #print "Arxiu: {}".format(arxiu)
             fparts = arxiu.split(".")
             numseg = fparts[-2]
             arxiu_conf = self.detecta_conf(arxiu, directori, numseg)
