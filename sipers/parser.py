@@ -8,18 +8,41 @@ import codecs
 from pymongo import MongoClient
 import ConfigParser
 import re
-from datetime import datetime
+from datetime import datetime, date
 
 import shutil
 import tempfile
 
 
-def parse_datetime(value, format='%Y%m%d'):
+def parse_datetime(value, format="%Y%m%d"):
     try:
         res = datetime.strptime(value, format)
     except:
-        res = value
+        res = None
     return res
+
+def parse_float(value):
+    try:
+        punts = value.replace(',', '.')
+        deci = punts.split('.')[-1]
+        nume = punts.split('.')[:-1]
+        if nume:
+            res = float('{}.{}'.format(''.join(nume), deci))
+        else:
+            res = value
+    except:
+        res = None
+    return res
+
+"""Variables amb els tipus de consums
+- comprovarem que sigui un dels dos valors 'x' in MAGNITUDS
+- Sempre dividirem pel valor de la unitat consum/MAGNITUDS['x']
+"""
+
+MAGNITUDS = {
+    'Wh': 1000,
+    'kWh': 1
+}
 
 
 class Parsejador(object):
@@ -47,7 +70,7 @@ class Parsejador(object):
         arxiuex.close()
         return True
 
-    def afagaarxius(self, path):
+    def agafarxius(self, path):
         llista_arxius = []
         for fitxer in os.listdir(path):
             fparts = fitxer.split(".")
@@ -140,6 +163,10 @@ class Parsejador(object):
         vals = [v.split() for v in valores]
         vals_tipus = [v[0] for v in vals]
         vals_apa = [v[1] for v in vals]
+        try:
+            vals_mag = [v[2] for v in vals]
+        except:
+            vals_mag = []
 
         # Contador de linies
         count = 0
@@ -161,6 +188,38 @@ class Parsejador(object):
         if not self.mongodb[self.contador].count():
             self.mongodb[self.contador].save({"_id": self.classe, "counter": 1})
 
+        #Creo el dataset buit
+        data = tablib.Dataset()
+        data.headers = headers_conf
+
+        # Millores: posar la cadena de lambda al fitxer de conf
+        for he, v in zip(self.headers, vals_tipus):
+            if v == 'float':
+                data.add_formatter(he[0],
+                                   lambda a: a and parse_float(a) or 0)
+            if v == 'integer':
+                data.add_formatter(he[0],
+                                   lambda a:
+                                   a and int(parse_float(a)) or 0)
+            if v == 'datetime':
+                data.add_formatter(he[0], parse_datetime)
+            if v == 'long':
+                data.add_formatter(he[0],
+                                   lambda a: a and long(a) or 0)
+
+        # Passar a kW les potencies que estan en W
+        for he, v in zip(self.headers, vals_mag):
+            if v == 'Wh':
+                data.add_formatter(he[0],
+                                   lambda a:
+                                   a and a/MAGNITUDS['Wh']
+                                   or 0)
+            elif v == 'kWh':
+                data.add_formatter(he[0],
+                                   lambda a:
+                                   a and a/MAGNITUDS['kWh']
+                                   or 0)
+
         # llegeixo per tot el fitxer
         while self.filecodificat.tell() < self.midafitxer:
             linia = self.filecodificat.readline()
@@ -173,7 +232,8 @@ class Parsejador(object):
             for i in range(0, len(slinia), len(position)):
                 try:
                     datal = [slinia[p] for p in position]
-                    data = tablib.Dataset(datal, headers=headers_conf)
+                    #data = tablib.Dataset(datal, headers=headers_conf)
+                    data.append(datal)
 
                     if self.num_fields and len(datal) != int(self.num_fields):
                         flog.write("Longitud de la fila {} incorrecte\n"
@@ -185,22 +245,6 @@ class Parsejador(object):
                     # Borro les claus que em surt l'arxiu de configuracio
                     for d in self.descartar:
                         del data[d]
-
-                    # Millores: posar la cadena de lambda al fitxer de conf
-                    for h, v in zip(self.headers, vals_tipus):
-                        if v == 'float':
-                            data.add_formatter(h[0],
-                                               lambda a: a and float(a) or 0)
-                        if v == 'integer':
-                            data.add_formatter(h[0],
-                                               lambda a:
-                                               a and int
-                                               (a.replace(',', '')) or 0)
-                        if v == 'datetime':
-                                    data.add_formatter(h[0], parse_datetime)
-                        if v == 'long':
-                            data.add_formatter(h[0],
-                                               lambda a: a and long(a) or 0)
 
                     document = data.dict[0]
                     #id incremental
@@ -218,10 +262,18 @@ class Parsejador(object):
 
                     # Inserto el document al mongodb
                     self.insert_mongo(document, collection)
+                    #Borrar els valors del tros
+                    data.wipe()
+                    #Torno a establir les capçaleres
+                    data.headers = headers_conf
                 except Exception as e:
                     print "Error a la linia: {}".format(e.message)
                     flog.write("Error a la fila {} , "
                                "no s'ha processat\n".format(count))
+                    #Faig el wipe per no extendre l'error
+                    data.wipe()
+                    #Torno a establir les capçaleres
+                    data.headers = headers_conf
 
                 contadorlinia += 1
                 position = [eval(num, {"n": contadorlinia}) for num in
@@ -255,17 +307,9 @@ class Parsejador(object):
         ####
 
         #Afagar els arxius de un directori
-        directori = "/home/pau/Documents/sips/prova3"
-        llista_arxius = self.afagaarxius(directori)
+        directori = "/home/pau/Documents/sips/prova"
+        llista_arxius = self.agafarxius(directori)
 
         for arxiu in llista_arxius:
-
             if self.connectamongo():
                 self.parser(arxiu, directori)
-
-            ## Part que funciona (antiga)
-            # fparts = arxiu.split(".")
-            # numseg = fparts[-2]
-            # arxiu_conf = self.detecta_conf(arxiu, directori, numseg)
-            # #print arxiu_conf
-            # self.parser_sips_endesa(arxiu_conf)
