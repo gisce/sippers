@@ -212,12 +212,12 @@ class Parsejador(object):
             if v == 'Wh':
                 data.add_formatter(he[0],
                                    lambda a:
-                                   a and a/MAGNITUDS['Wh']
+                                   a and float(a)/MAGNITUDS['Wh']
                                    or 0)
             elif v == 'kWh':
                 data.add_formatter(he[0],
                                    lambda a:
-                                   a and a/MAGNITUDS['kWh']
+                                   a and float(a)/MAGNITUDS['kWh']
                                    or 0)
 
         # llegeixo per tot el fitxer
@@ -307,7 +307,7 @@ class Parsejador(object):
         ####
 
         #Afagar els arxius de un directori
-        directori = "/home/pau/Documents/sips/prova"
+        directori = "/home/pau/Documents/sips/prova3"
         llista_arxius = self.agafarxius(directori)
 
         for arxiu in llista_arxius:
