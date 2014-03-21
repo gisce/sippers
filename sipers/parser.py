@@ -86,15 +86,15 @@ class Parsejador(object):
 
     def insert_mongo(self, document, collection):
         # Afegeixo les entrades
-        # try:
-        #     pvalues = [document[k] for k in self.pkeys]
-        #     query = dict(zip(self.pkeys, pvalues))
-        #     res = collection.update(query, document, upsert=True)
-        # except pymongo.errors.OpertionFailure:
-        #     print "faig insert"
-        #     collection.insert(document)
-
-        collection.insert(document)
+        try:
+            pvalues = [document[k] for k in self.pkeys]
+            query = dict(zip(self.pkeys, pvalues))
+            #res = collection.update(query, document, upsert=True)
+            res = collection.update(query, document)
+            if res['updatedExisting'] is False:
+                collection.insert(document)
+        except pymongo.errors.OpertionFailure:
+            self.flog.write("Error: A l'insert del mongodb")
 
         return True
 
