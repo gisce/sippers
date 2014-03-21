@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 
 import os
-import zipfile
 import sys
+import zipfile
 import tablib
 import codecs
 from pymongo import MongoClient
 import ConfigParser
 import re
 from datetime import datetime, date
-
 import shutil
 import tempfile
-
+import pymongo
 
 def parse_datetime(value, format="%Y%m%d"):
+    # Funcio per l'add_formatter converteixi de string a datetime
     try:
         res = datetime.strptime(value, format)
     except:
@@ -22,6 +22,7 @@ def parse_datetime(value, format="%Y%m%d"):
     return res
 
 def parse_float(value):
+    # Funcio per l'add_formatter converteixi valors en coma a float amb punt
     try:
         punts = value.replace(',', '.')
         deci = punts.split('.')[-1]
@@ -34,7 +35,8 @@ def parse_float(value):
         res = None
     return res
 
-"""Variables amb els tipus de consums
+"""
+Variables amb els tipus de consums
 - comprovarem que sigui un dels dos valors 'x' in MAGNITUDS
 - Sempre dividirem pel valor de la unitat consum/MAGNITUDS['x']
 """
@@ -46,22 +48,24 @@ MAGNITUDS = {
 
 
 class Parsejador(object):
-
+    # Variables estatiques
     mongodb = None
     fitxer_conf = None
     dictres = None
     filecodificat = None
-
     delimiter = None
     classe = None
     contador = None
     num_fields = None
     headers = None
     descartar = None
-
+    primary_keys = None
     midafitxer = None
+    flog = None
+    pkeys = None
 
     def extreu_arxiu(self, tail, head, tmp_dir):
+        """Mètode per descomprimir el zip"""
         arxiuex = open(head + '/' + tail, 'rb')
         z = zipfile.ZipFile(arxiuex)
         #print "namelist:{}".format(z.namelist())
@@ -71,6 +75,7 @@ class Parsejador(object):
         return True
 
     def agafarxius(self, path):
+        """Donat un directori retorna llista dels zips existents"""
         llista_arxius = []
         for fitxer in os.listdir(path):
             fparts = fitxer.split(".")
@@ -79,13 +84,22 @@ class Parsejador(object):
                 llista_arxius.append(fitxer)
         return llista_arxius
 
-    def insert_mongo(self, documents, collection):
+    def insert_mongo(self, document, collection):
         # Afegeixo les entrades
-        collection.insert(documents)
-        return {}
+        # try:
+        #     pvalues = [document[k] for k in self.pkeys]
+        #     query = dict(zip(self.pkeys, pvalues))
+        #     res = collection.update(query, document, upsert=True)
+        # except pymongo.errors.OpertionFailure:
+        #     print "faig insert"
+        #     collection.insert(document)
+
+        collection.insert(document)
+
+        return True
 
     def get_available_conf(self):
-        """Aquesta funció retorna una llista amb tots els tipus de fitxers que
+        """Aquest mètode retorna una llista amb tots els tipus de fitxers que
            podem carregar"""
         confs = []
         for fitxer in os.listdir("configs"):
@@ -94,6 +108,7 @@ class Parsejador(object):
         return confs
 
     def detectaconf(self, arxiu):
+        """Agafar la configuració corresponent dels fitxers de configuració"""
         head, tail = os.path.split(arxiu)
 
         for fitxer in os.listdir("configs"):
@@ -105,13 +120,13 @@ class Parsejador(object):
                 self.fitxer_conf = fitxer
 
         if not self.fitxer_conf:
-            print "Error, no s'ha trobat cap coincidencia amb els fitxers de " \
-                  "configuració"
             return False
         else:
             return True
 
     def load_conf(self, arxiu, directori):
+        """Mètode per agafar valors de la configuració, crear un directori
+        temporal """
         head, tail = os.path.split(arxiu)
         conf = ConfigParser.RawConfigParser()
         conf.readfp(open("configs/"+self.fitxer_conf))
@@ -119,44 +134,55 @@ class Parsejador(object):
         # Valors de la configuracio
         self.delimiter = conf.get('parser', 'delimiter')
         self.classe = conf.get('parser', 'class')
-        self.contador = conf.get('parser', 'contador')
+        #self.contador = conf.get('parser', 'contador')
         self.headers = conf.items('fields')
         self.descartar = conf.options('descartar')
+        self.primary_keys = conf.get('parser', 'primary_keys')
+        self.pkeys = self.primary_keys.split(',')
         try:
             self.num_fields = conf.get('parser', 'num_fields')
         except:
             self.num_fields = False
 
-
         # Crear directori temporal
         try:
             tmp_dir = tempfile.mkdtemp()
             self.extreu_arxiu(tail, directori, tmp_dir)
-            # Tinc de buscar el fitxer extret
+            # Buscar el fitxer extret
             for (path, dirs, files) in os.walk(tmp_dir):
                 if files:
+                    # Guardar el fitxer i la mida
                     self.filecodificat = codecs.open(path+'/'+files[0], "r",
                                                      "iso-8859-15")
                     self.midafitxer = os.stat(path+'/'+files[0]).st_size
+        except Exception as e:
+            self.flog.write("Error: a la extració del zip, info: {}"
+                            .format(e.message))
+            raise SystemExit
         finally:
             try:
+                # Borrar el directori temporal
                 shutil.rmtree(tmp_dir)
             except OSError as exc:
                 if exc.errno != 2:
-                    raise
+                    raise SystemExit
 
-        return {}
+        return True
 
     def connectamongo(self):
-        # Connectar i escollir la bbdd
-        client = MongoClient()
-        # Base de dades
-        self.mongodb = client.openerp
+        try:
+            # Connectar i escollir la bbdd
+            client = MongoClient()
+            # Base de dades
+            #self.mongodb = client.openerp
+            self.mongodb = client.test_som
+        except Exception as e:
+            self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
+                            "info: {}".format(e.message))
+            raise SystemExit
         return self.mongodb
 
     def carregar_mongo(self):
-        # Log per els errors de lectura
-        flog = open("log.txt", "w")
         # Camps del conf
         headers_conf = [h[0] for h in self.headers]
         valores = [h[1] for h in self.headers]
@@ -172,7 +198,7 @@ class Parsejador(object):
         count = 0
         # Per calcular la progressió
         sumatori = 0
-        #USUARI DE TEST QUE FEM SERVIR
+        # Usuari del mongodb
         user = 'default'
 
         # Afago la coleccio que vull
@@ -181,12 +207,13 @@ class Parsejador(object):
         elif self.classe == 'giscedata_sips_consums':
             collection = self.mongodb.giscedata_sips_consums
         else:
-            print "Error, no es troba la collection al conf"
+            self.flog.write("Error: No es reconeix la collection {}"
+                            .format(self.classe))
             raise SystemExit
 
         # Comprovo que la collecció estigui creada, si no la creo
-        if not self.mongodb[self.contador].count():
-            self.mongodb[self.contador].save({"_id": self.classe, "counter": 1})
+        if not self.mongodb['counters'].count():
+            self.mongodb['counters'].save({"_id": self.classe, "counter": 1})
 
         #Creo el dataset buit
         data = tablib.Dataset()
@@ -220,40 +247,57 @@ class Parsejador(object):
                                    a and float(a)/MAGNITUDS['kWh']
                                    or 0)
 
-        # llegeixo per tot el fitxer
+        # Crear index per les primary_keys
+        if self.classe == 'giscedata_sips_ps':
+            self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
+                {'name': 1},
+                {'background': true})""")
+
+        elif self.classe == 'giscedata_sips_consums':
+            self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
+                {'name': 1},
+                {'background': true})""")
+        else:
+            self.flog.write("Error: En fer l'index {}"
+                            )
+            raise SystemExit
+
+        # Llegeixo per tot el fitxer
         while self.filecodificat.tell() < self.midafitxer:
+            # Tracto les dades del fitxer linia per linia
             linia = self.filecodificat.readline()
             slinia = tuple(linia.split(self.delimiter))
             slinia = map(lambda s: s.strip(), slinia)
 
+            # Contador del tros de la linia
             contadorlinia = 0
+            # Llista de les posicions de les capçaleres segons la configuració
             position = [eval(num, {"n": contadorlinia}) for num in vals_apa]
-
+            # Itero per els trossos de la linia
             for i in range(0, len(slinia), len(position)):
                 try:
+                    # Llista dels valors del tros que agafem dins la linia
                     datal = [slinia[p] for p in position]
-                    #data = tablib.Dataset(datal, headers=headers_conf)
                     data.append(datal)
 
                     if self.num_fields and len(datal) != int(self.num_fields):
-                        flog.write("Longitud de la fila {} incorrecte\n"
-                                   "len_data:{}, "
-                                   "self.num_fields:{}".format(count,
-                                                               len(datal),
-                                                               self.num_fields))
+                        self.flog.write("Longitud de la fila {} incorrecte\n"
+                                        "len_data:{}, self.num_fields:{}"
+                                        .format(count, len(datal),
+                                                self.num_fields))
 
                     # Borro les claus que em surt l'arxiu de configuracio
                     for d in self.descartar:
                         del data[d]
-
+                    # Creo el diccionari per fer l'insert al mongo
                     document = data.dict[0]
-                    #id incremental
-                    counter = self.mongodb[self.contador].find_and_modify(
+
+                    # Id incremental
+                    counter = self.mongodb['counters'].find_and_modify(
                         {'_id': self.classe},
                         {'$inc': {'counter': 1}})
 
                     # Update del index
-                    #print counter
                     document.update(
                         {'id': counter['counter'],
                          'create_uid': user,
@@ -267,49 +311,56 @@ class Parsejador(object):
                     #Torno a establir les capçaleres
                     data.headers = headers_conf
                 except Exception as e:
-                    print "Error a la linia: {}".format(e.message)
-                    flog.write("Error a la fila {} , "
-                               "no s'ha processat\n".format(count))
+                    self.flog.write("Error a la fila {}, "
+                                    "info: {}\n".format(count, e.message))
                     #Faig el wipe per no extendre l'error
                     data.wipe()
                     #Torno a establir les capçaleres
                     data.headers = headers_conf
-
+                # Actualizo el contador i les posicions
                 contadorlinia += 1
                 position = [eval(num, {"n": contadorlinia}) for num in
                             vals_apa]
-
+            # Actualitzo contador de linies, sumatori i tantpercert completat
             count += 1
             sumatori += len(linia)
             tantpercent = float(sumatori) / self.midafitxer * 100.0
-            print "Completat: {} %".format(tantpercent)
+            #print "Completat: {} %".format(tantpercent)
+            sys.stdout.write("\r%d%%" % int(tantpercent))
+            sys.stdout.flush()
 
         print "Numero de linies: {}".format(count)
-        flog.close()
-
-        return {}
+        return True
 
     def parser(self, arxiu, directori, conf=False):
         # Si ve conf comprovar que sigui una opció possible
-        if conf not in self.get_available_conf() or conf is False:
-            print "Error, aquest tipus no existeix"
+        if conf not in self.get_available_conf() and conf:
+            self.flog.write("Error, la configuració {} que ha entrat no es "
+                            "troba als fitxers de configuració".format(conf))
+            raise SystemExit
         # Si no passem cap configuracio predeterminada
         if not conf:
             if self.detectaconf(arxiu):
                 self.load_conf(arxiu, directori)
                 self.carregar_mongo()
-
+            else:
+                self.flog.write("Error, No s'ha trobat el fitxer de "
+                                "configuració correcte de forma automatica")
         return True
 
     def __init__(self):
-        ####
-        # Parser del fitxer de SIPS de Endesa
-        ####
+        # Parser del fitxer de SIPS
 
         #Afagar els arxius de un directori
-        directori = "/home/pau/Documents/sips/prova3"
+        directori = "/home/pau/Documents/sips/prova"
         llista_arxius = self.agafarxius(directori)
-
+        # Processar per cada un dels arxius zip
         for arxiu in llista_arxius:
+            # Log per els errors de lectura
+            print "Arxiu:{}".format(arxiu)
+            self.flog = open(arxiu + ".txt", "w")
+
             if self.connectamongo():
                 self.parser(arxiu, directori)
+
+            self.flog.close()
