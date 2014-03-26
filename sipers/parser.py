@@ -49,9 +49,10 @@ MAGNITUDS = {
 
 class Parsejador(object):
     # Variables estatiques
+    directori = None
+    dbname = None
     mongodb = None
     fitxer_conf = None
-    dictres = None
     filecodificat = None
     delimiter = None
     classe = None
@@ -63,6 +64,12 @@ class Parsejador(object):
     midafitxer = None
     flog = None
     pkeys = None
+
+    def __init__(self, directori=None, dbname=None):
+        # Parser del fitxer de SIPS
+        #Afagar els arxius de un directori
+        self.directori = directori
+        self.dbname = dbname
 
     def extreu_arxiu(self, tail, head, tmp_dir):
         """Mètode per descomprimir el zip"""
@@ -79,7 +86,7 @@ class Parsejador(object):
         llista_arxius = []
         for fitxer in os.listdir(path):
             fparts = fitxer.split(".")
-            #print "fparts {}".format(fparts)
+            print "fparts {}".format(fparts)
             if fparts[-1] == 'ZIP':
                 llista_arxius.append(fitxer)
         return llista_arxius
@@ -174,8 +181,8 @@ class Parsejador(object):
             # Connectar i escollir la bbdd
             client = MongoClient()
             # Base de dades
-            #self.mongodb = client.openerp
-            self.mongodb = client.test_som
+            #self.mongodb = client.somenergia
+            self.mongodb = client[self.dbname]
         except Exception as e:
             self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
                             "info: {}".format(e.message))
@@ -250,13 +257,13 @@ class Parsejador(object):
         # Crear index per les primary_keys
         if self.classe == 'giscedata_sips_ps':
             self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
-                {'name': 1},
-                {'background': true})""")
+                {"name": 1},
+                {"background": true})""")
 
         elif self.classe == 'giscedata_sips_consums':
             self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
-                {'name': 1},
-                {'background': true})""")
+                {"name": 1},
+                {"background": true})""")
         else:
             self.flog.write("Error: En fer l'index {}"
                             )
@@ -329,7 +336,7 @@ class Parsejador(object):
             sys.stdout.write("\r%d%%" % int(tantpercent))
             sys.stdout.flush()
 
-        print "Numero de linies: {}".format(count)
+        print "\nNumero de linies: {}".format(count)
         return True
 
     def parser(self, arxiu, directori, conf=False):
@@ -348,12 +355,8 @@ class Parsejador(object):
                                 "configuració correcte de forma automatica")
         return True
 
-    def __init__(self):
-        # Parser del fitxer de SIPS
-
-        #Afagar els arxius de un directori
-        directori = "/home/pau/Documents/sips/prova"
-        llista_arxius = self.agafarxius(directori)
+    def run(self):
+        llista_arxius = self.agafarxius(self.directori)
         # Processar per cada un dels arxius zip
         for arxiu in llista_arxius:
             # Log per els errors de lectura
@@ -361,6 +364,6 @@ class Parsejador(object):
             self.flog = open(arxiu + ".txt", "w")
 
             if self.connectamongo():
-                self.parser(arxiu, directori)
+                self.parser(arxiu, self.directori)
 
             self.flog.close()
