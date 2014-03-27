@@ -131,7 +131,7 @@ class Parsejador(object):
         else:
             return True
 
-    def load_conf(self, arxiu, directori):
+    def load_conf(self, arxiu, directori, dirtmp=None):
         """Mètode per agafar valors de la configuració, crear un directori
         temporal """
         head, tail = os.path.split(arxiu)
@@ -153,7 +153,7 @@ class Parsejador(object):
 
         # Crear directori temporal
         try:
-            tmp_dir = tempfile.mkdtemp()
+            tmp_dir = tempfile.mkdtemp(dir=dirtmp)
             self.extreu_arxiu(tail, directori, tmp_dir)
             # Buscar el fitxer extret
             for (path, dirs, files) in os.walk(tmp_dir):
@@ -165,6 +165,8 @@ class Parsejador(object):
         except Exception as e:
             self.flog.write("Error: a la extració del zip, info: {}"
                             .format(e.message))
+            # Borrar el directori temporal
+            shutil.rmtree(tmp_dir)
             raise SystemExit
         finally:
             try:
