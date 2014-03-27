@@ -363,7 +363,11 @@ class Parsejador(object):
             print "Arxiu:{}".format(arxiu)
             self.flog = open(arxiu + ".txt", "w")
 
-            if self.connectamongo():
-                self.parser(arxiu, self.directori)
+            try:
+                if self.connectamongo():
+                    self.parser(arxiu, self.directori)
+                self.flog.write("Fitxer finalitzat")
+            except:
+                self.flog.write("Hi ha hagut algun error")
 
             self.flog.close()
