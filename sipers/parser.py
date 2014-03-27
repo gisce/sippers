@@ -64,6 +64,7 @@ class Parsejador(object):
     midafitxer = None
     flog = None
     pkeys = None
+    tmpdir = None
 
     def __init__(self, directori=None, dbname=None):
         # Parser del fitxer de SIPS
@@ -113,6 +114,24 @@ class Parsejador(object):
             fparts = fitxer.split(".")
             confs.append(fparts[0])
         return confs
+
+    def detectaconfservers(self, server):
+        """Afagar directori i bbdd del fitxer de conf de servers"""
+        for config in os.listdir("configs/servers"):
+            conf = ConfigParser.RawConfigParser()
+            conf.readfp(open("configs/servers/"+config))
+            serverpat = conf.get('global', 'server')
+
+            if serverpat == server:
+                self.directori = conf.get('global', 'directori')
+                self.dbname = conf.get('global', 'dbname')
+                self.tmpdir = conf.get('global', 'tmp_dir')
+            else:
+                print "Error, no s'ha trobat cap coincidencia en les confs" \
+                      "dels servidors"
+                return False
+
+        return True
 
     def detectaconf(self, arxiu):
         """Agafar la configuració corresponent dels fitxers de configuració"""
