@@ -76,7 +76,7 @@ class Parsejador(object):
         """Mètode per descomprimir el zip"""
         arxiuex = open(head + '/' + tail, 'rb')
         z = zipfile.ZipFile(arxiuex)
-        #print "namelist:{}".format(z.namelist())
+
         for name in z.namelist():
             z.extract(name, tmp_dir)
         arxiuex.close()
@@ -97,7 +97,7 @@ class Parsejador(object):
         try:
             pvalues = [document[k] for k in self.pkeys]
             query = dict(zip(self.pkeys, pvalues))
-            #res = collection.update(query, document, upsert=True)
+
             res = collection.update(query, document)
             if res['updatedExisting'] is False:
                 collection.insert(document)
@@ -139,7 +139,10 @@ class Parsejador(object):
 
         for fitxer in os.listdir("configs"):
             conf = ConfigParser.RawConfigParser()
-            conf.readfp(open("configs/"+fitxer))
+            try:
+                conf.readfp(open("configs/"+fitxer))
+            except IOError:
+                continue
             pattern = conf.get('parser', 'pattern')
             # Coincideix el nom del fitxer amb camp de configuració
             if re.match(pattern, tail):
@@ -149,6 +152,26 @@ class Parsejador(object):
             return False
         else:
             return True
+
+    def detectaconfselect(self, selector=None):
+        """mètode alternatiu per trobar configuració, amb un selector"""
+
+        for fitxer in os.listdir("configs"):
+            conf = ConfigParser.RawConfigParser()
+            try:
+                conf.readfp(open("configs/"+fitxer))
+            except IOError:
+                continue
+            nom_distri = conf.get('distri_name', 'pattern')
+            # Buscar el nom de la distribuidora
+            if nom_distri == selector:
+                self.fitxer_conf = fitxer
+
+        if not self.fitxer_conf:
+            return False
+        else:
+            return True
+
 
     def load_conf(self, arxiu, directori, dirtmp=None):
         """Mètode per agafar valors de la configuració, crear un directori
@@ -160,7 +183,6 @@ class Parsejador(object):
         # Valors de la configuracio
         self.delimiter = conf.get('parser', 'delimiter')
         self.classe = conf.get('parser', 'class')
-        #self.contador = conf.get('parser', 'contador')
         self.headers = conf.items('fields')
         self.descartar = conf.options('descartar')
         self.primary_keys = conf.get('parser', 'primary_keys')
@@ -202,7 +224,6 @@ class Parsejador(object):
             # Connectar i escollir la bbdd
             client = MongoClient()
             # Base de dades
-            #self.mongodb = client.somenergia
             self.mongodb = client[self.dbname]
         except Exception as e:
             self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
@@ -353,7 +374,7 @@ class Parsejador(object):
             count += 1
             sumatori += len(linia)
             tantpercent = float(sumatori) / self.midafitxer * 100.0
-            #print "Completat: {} %".format(tantpercent)
+
             sys.stdout.write("\r%d%%" % int(tantpercent))
             sys.stdout.flush()
 
