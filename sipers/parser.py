@@ -12,6 +12,7 @@ from datetime import datetime, date
 import shutil
 import tempfile
 import pymongo
+import pdb
 
 def parse_datetime(value, format="%Y%m%d"):
     # Funcio per l'add_formatter converteixi de string a datetime
@@ -145,7 +146,7 @@ class Parsejador(object):
                 continue
             pattern = conf.get('parser', 'pattern')
             # Coincideix el nom del fitxer amb camp de configuració
-            if re.match(pattern, tail):
+            if re.match(pattern, tail) and len(pattern):
                 self.fitxer_conf = fitxer
 
         if not self.fitxer_conf:
@@ -162,7 +163,11 @@ class Parsejador(object):
                 conf.readfp(open("configs/"+fitxer))
             except IOError:
                 continue
-            nom_distri = conf.get('distri_name', 'pattern')
+            try:
+                nom_distri = conf.get('distri_name', 'pattern')
+            except Exception as e:
+                continue
+
             # Buscar el nom de la distribuidora
             if nom_distri == selector:
                 self.fitxer_conf = fitxer
@@ -381,33 +386,51 @@ class Parsejador(object):
         print "\nNumero de linies: {}".format(count)
         return True
 
-    def parser(self, arxiu, directori, conf=False):
+    def parser(self, arxiu, directori, conf=False, selector=None):
         # Si ve conf comprovar que sigui una opció possible
         if conf not in self.get_available_conf() and conf:
             self.flog.write("Error, la configuració {} que ha entrat no es "
                             "troba als fitxers de configuració".format(conf))
             raise SystemExit
+        elif conf in self.get_available_conf() and conf:
+            self.fitxer_conf = conf
         # Si no passem cap configuracio predeterminada
         if not conf:
-            if self.detectaconf(arxiu):
-                self.load_conf(arxiu, directori)
-                self.carregar_mongo()
+            if selector:
+                try:
+                    self.detectaconfselect(selector)
+                except Exception as e:
+                    self.flog.write("Error, en detectar la configuracio amb "
+                                    "el selector. {}".format(e.message))
             else:
-                self.flog.write("Error, No s'ha trobat el fitxer de "
-                                "configuració correcte de forma automatica")
+                try:
+                    self.detectaconf(arxiu)
+                except Exception as e:
+                    self.flog.write("Error, No s'ha trobat el fitxer de "
+                                    "configuració correcte de "
+                                    "forma automatica. {}".format(e.message))
+
+            self.load_conf(arxiu, directori)
+            self.carregar_mongo()
+
         return True
 
-    def run(self):
+    def run(self, conf=False, selector=None):
         llista_arxius = self.agafarxius(self.directori)
         # Processar per cada un dels arxius zip
         for arxiu in llista_arxius:
             # Log per els errors de lectura
             print "Arxiu:{}".format(arxiu)
-            self.flog = open(arxiu + ".txt", "w")
+
+            try:
+                self.flog = open(arxiu + ".txt", "w")
+            except (OSError, IOError) as e:
+                print "Error al intentar obrir el fitxer de log {}".format(
+                    e.errno)
 
             try:
                 if self.connectamongo():
-                    self.parser(arxiu, self.directori)
+                    self.parser(arxiu, self.directori, conf, selector)
                 self.flog.write("Fitxer finalitzat")
             except:
                 self.flog.write("Hi ha hagut algun error")
