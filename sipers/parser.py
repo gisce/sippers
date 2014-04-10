@@ -12,12 +12,12 @@ from datetime import datetime, date
 import shutil
 import tempfile
 import pymongo
-import pdb
+import copy
 
-def parse_datetime(value, format="%Y%m%d"):
+def parse_datetime(value, dataformat):
     # Funcio per l'add_formatter converteixi de string a datetime
     try:
-        res = datetime.strptime(value, format)
+        res = datetime.strptime(value, dataformat)
     except:
         res = None
     return res
@@ -35,6 +35,14 @@ def parse_float(value):
     except:
         res = None
     return res
+
+def slices(s, *args):
+    # Funció per tallar un string donades les mides dels camps.
+    # La llista amb les mides dels camps entren per els args.
+    position = 0
+    for length in args:
+        yield s[position:position + length]
+        position += length
 
 """
 Variables amb els tipus de consums
@@ -57,6 +65,9 @@ class Parsejador(object):
     filecodificat = None
     delimiter = None
     classe = None
+    classes = None
+    classeps = None
+    classeconsums = None
     contador = None
     num_fields = None
     headers = None
@@ -66,6 +77,7 @@ class Parsejador(object):
     flog = None
     pkeys = None
     tmpdir = None
+    data_format = None
 
     def __init__(self, directori=None, dbname=None):
         # Parser del fitxer de SIPS
@@ -186,16 +198,28 @@ class Parsejador(object):
         conf.readfp(open("configs/"+self.fitxer_conf))
 
         # Valors de la configuracio
+        # TODO : fer que tots els camps siguin obligatoris o tractar perque
+        # puguin ser-hi o no
         self.delimiter = conf.get('parser', 'delimiter')
-        self.classe = conf.get('parser', 'class')
         self.headers = conf.items('fields')
         self.descartar = conf.options('descartar')
+        self.classeps = conf.options('psdescartar')
+        self.classeconsums = conf.options('consumsdescartar')
         self.primary_keys = conf.get('parser', 'primary_keys')
+        self.data_format = conf.get('parser', 'data_format')
         self.pkeys = self.primary_keys.split(',')
         try:
             self.num_fields = conf.get('parser', 'num_fields')
         except:
             self.num_fields = False
+        try:
+            self.classe = conf.get('parser', 'class')
+        except:
+            self.classe = False
+        try:
+            self.classes = conf.get('parser', 'classes')
+        except:
+            self.classes = False
 
         # Crear directori temporal
         try:
@@ -241,12 +265,28 @@ class Parsejador(object):
         headers_conf = [h[0] for h in self.headers]
         valores = [h[1] for h in self.headers]
         vals = [v.split() for v in valores]
+        #Primera columna (tipus) dels valors
         vals_tipus = [v[0] for v in vals]
         vals_apa = [v[1] for v in vals]
+        # TODO: columnes obligatories o no, cal tractar casos
         try:
             vals_mag = [v[2] for v in vals]
         except:
             vals_mag = []
+        # agafar columna de classe per el cas de consum/sips al mateix arxiu
+        # TODO : treure aquesta columna? Ara ja es fa servir les dos options
+        # de la configuració.
+        if self.classes == 'giscedata_sips_ps/giscedata_sips_consums':
+            try:
+                vals_class = [v[3] for v in vals]
+            except:
+                vals_class = []
+        # si tenim emplada fixa agafarem els valors de lultilma columa
+        if self.delimiter == 'ampfix':
+            try:
+                vals_long = [int(v[4]) for v in vals]
+            except:
+                vals_long = []
 
         # Contador de linies
         count = 0
@@ -260,9 +300,12 @@ class Parsejador(object):
             collection = self.mongodb.giscedata_sips_ps
         elif self.classe == 'giscedata_sips_consums':
             collection = self.mongodb.giscedata_sips_consums
+        elif self.classes == 'giscedata_sips_ps/giscedata_sips_consums':
+            collectionps = self.mongodb.giscedata_sips_ps
+            collectionconsums = self.mongodb.giscedata_sips_consums
         else:
-            self.flog.write("Error: No es reconeix la collection {}"
-                            .format(self.classe))
+            self.flog.write("Error: No es reconeix la collection {}, {}"
+                            .format(self.classe, self.classes))
             raise SystemExit
 
         # Comprovo que la collecció estigui creada, si no la creo
@@ -283,7 +326,10 @@ class Parsejador(object):
                                    lambda a:
                                    a and int(parse_float(a)) or 0)
             if v == 'datetime':
-                data.add_formatter(he[0], parse_datetime)
+                data.add_formatter(he[0],
+                                   lambda a:
+                                   a and parse_datetime(a, self.data_format) or
+                                   0)
             if v == 'long':
                 data.add_formatter(he[0],
                                    lambda a: a and long(a) or 0)
@@ -306,8 +352,14 @@ class Parsejador(object):
             self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
                 {"name": 1},
                 {"background": true})""")
-
         elif self.classe == 'giscedata_sips_consums':
+            self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
+                {"name": 1},
+                {"background": true})""")
+        elif self.classes == 'giscedata_sips_ps/giscedata_sips_consums':
+            self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
+                {"name": 1},
+                {"background": true})""")
             self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
                 {"name": 1},
                 {"background": true})""")
@@ -320,20 +372,29 @@ class Parsejador(object):
         while self.filecodificat.tell() < self.midafitxer:
             # Tracto les dades del fitxer linia per linia
             linia = self.filecodificat.readline()
-            slinia = tuple(linia.split(self.delimiter))
-            slinia = map(lambda s: s.strip(), slinia)
+            # Si es d'amplada fixe tractar diferent que quan
+            # tenim un delimitador
+            if self.delimiter != 'ampfix':
+                slinia = tuple(linia.split(self.delimiter))
+                slinia = map(lambda s: s.strip(), slinia)
+            else:
+                slinia = tuple(slices(linia, *vals_long))
+                slinia = map(lambda s: s.strip(), slinia)
 
             # Contador del tros de la linia
-            contadorlinia = 0
+            contadortroslinia = 0
             # Llista de les posicions de les capçaleres segons la configuració
-            position = [eval(num, {"n": contadorlinia}) for num in vals_apa]
+            position = [eval(num, {"n": contadortroslinia}) for num in vals_apa]
+
+            # llista dels trossos dels sips
+            data_ps = []
+
             # Itero per els trossos de la linia
             for i in range(0, len(slinia), len(position)):
                 try:
                     # Llista dels valors del tros que agafem dins la linia
                     datal = [slinia[p] for p in position]
                     data.append(datal)
-
                     if self.num_fields and len(datal) != int(self.num_fields):
                         self.flog.write("Longitud de la fila {} incorrecte\n"
                                         "len_data:{}, self.num_fields:{}"
@@ -343,23 +404,59 @@ class Parsejador(object):
                     # Borro les claus que em surt l'arxiu de configuracio
                     for d in self.descartar:
                         del data[d]
-                    # Creo el diccionari per fer l'insert al mongo
-                    document = data.dict[0]
+                    # Comprovar si el fitxer es amb consums i sips junts o no
+                    if self.classes:
+                        # Sips i consums junts
+                        # Copies de l'objecte Dataset de ps i consums
+                        data_ps = data.dict[0].copy()
+                        data_cons = data_ps.copy()
+                        # TODO Utilitzar zip per només fer un sol for
+                        # Borro els camps inecessaris de ps i consums
+                        for camp in self.classeps:
+                            del data_ps[camp]
+                        for camp in self.classeconsums:
+                            del data_cons[camp]
+                        # Creo els diccionaris per insertar al mongo
+                        documentps = data_ps
+                        documentcons = data_cons
+                        # Creo els ids incrementals per les dos taules
+                        counterps = self.mongodb['counters'].find_and_modify(
+                            {'_id': 'giscedata_sips_ps'},
+                            {'$inc': {'counter': 1}})
+                        countercons = self.mongodb['counters'].find_and_modify(
+                            {'_id': 'giscedata_sips_consums'},
+                            {'$inc': {'counter': 1}})
+                        # Update del index
+                        documentps.update(
+                            {'id': counterps['counter'],
+                             'create_uid': user,
+                             'create_date': datetime.now()}
+                        )
+                        documentcons.update(
+                            {'id': countercons['counter'],
+                             'create_uid': user,
+                             'create_date': datetime.now()}
+                        )
+                        # Inserto el document sips al mongodb
+                        self.insert_mongo(documentps, collectionps)
+                        # Inserto el document consums al mongodb
+                        self.insert_mongo(documentcons, collectionconsums)
+                    else:
+                        # Creo el diccionari per fer l'insert al mongo
+                        document = data.dict[0]
+                        # Id incremental
+                        counter = self.mongodb['counters'].find_and_modify(
+                            {'_id': self.classe},
+                            {'$inc': {'counter': 1}})
+                        # Update del index
+                        document.update(
+                            {'id': counter['counter'],
+                             'create_uid': user,
+                             'create_date': datetime.now()}
+                        )
+                        # Inserto el document al mongodb
+                        self.insert_mongo(document, collection)
 
-                    # Id incremental
-                    counter = self.mongodb['counters'].find_and_modify(
-                        {'_id': self.classe},
-                        {'$inc': {'counter': 1}})
-
-                    # Update del index
-                    document.update(
-                        {'id': counter['counter'],
-                         'create_uid': user,
-                         'create_date': datetime.now()}
-                    )
-
-                    # Inserto el document al mongodb
-                    self.insert_mongo(document, collection)
                     #Borrar els valors del tros
                     data.wipe()
                     #Torno a establir les capçaleres
@@ -371,9 +468,10 @@ class Parsejador(object):
                     data.wipe()
                     #Torno a establir les capçaleres
                     data.headers = headers_conf
-                # Actualizo el contador i les posicions
-                contadorlinia += 1
-                position = [eval(num, {"n": contadorlinia}) for num in
+
+                # Actualizo el contador del tros i les posicions
+                contadortroslinia += 1
+                position = [eval(num, {"n": contadortroslinia}) for num in
                             vals_apa]
             # Actualitzo contador de linies, sumatori i tantpercert completat
             count += 1
@@ -421,7 +519,6 @@ class Parsejador(object):
         for arxiu in llista_arxius:
             # Log per els errors de lectura
             print "Arxiu:{}".format(arxiu)
-
             try:
                 self.flog = open(arxiu + ".txt", "w")
             except (OSError, IOError) as e:
