@@ -14,19 +14,13 @@ import tempfile
 import pymongo
 import copy
 
-def datetime_format(value, dataformat=None):
+def parse_datetime(value, dataformat):
+    # Funcio per l'add_formatter converteixi de string a datetime
     try:
-        if dataformat:
-            res = datetime.strptime(value, dataformat)
-        else:
-            res = datetime.strptime(value, "%Y%m%d")
+        res = datetime.strptime(value, dataformat)
     except:
         res = None
     return res
-
-def parse_datetime(value):
-
-    return datetime_format(value)
 
 def parse_float(value):
     # Funcio per l'add_formatter converteixi valors en coma a float amb punt
@@ -338,10 +332,8 @@ class Parsejador(object):
                                    lambda a:
                                    a and int(parse_float(a)) or 0)
             if v == 'datetime':
-                data.add_formatter(he[0], parse_datetime)
-                                   # lambda a:
-                                   # a and parse_datetime(a, self.data_format) or
-                                   # 0)
+                data.add_formatter(he[0], lambda a:
+                                   a and parse_datetime(a, self.data_format))
             if v == 'long':
                 data.add_formatter(he[0],
                                    lambda a: a and long(a) or 0)
@@ -362,19 +354,15 @@ class Parsejador(object):
         # Crear index per les primary_keys
         if self.classe == 'giscedata_sips_ps':
             self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
-                {"name": 1},
-                {"background": true})""")
+                {"name": 1})""")
         elif self.classe == 'giscedata_sips_consums':
             self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
-                {"name": 1},
-                {"background": true})""")
+                {"name": 1})""")
         elif self.classes == 'giscedata_sips_ps/giscedata_sips_consums':
             self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
-                {"name": 1},
-                {"background": true})""")
+                {"name": 1})""")
             self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
-                {"name": 1},
-                {"background": true})""")
+                {"name": 1})""")
         else:
             self.flog.write("Error: En fer l'index {}"
                             )
@@ -413,15 +401,19 @@ class Parsejador(object):
                                         .format(count, len(datal),
                                                 self.num_fields))
 
-                    # Borro les claus que em surt l'arxiu de configuracio
-                    for d in self.descartar:
-                        del data[d]
                     # Comprovar si el fitxer es amb consums i sips junts o no
                     if self.classes:
                         # Sips i consums junts
                         # Copies de l'objecte Dataset de ps i consums
                         data_ps = data.dict[0].copy()
                         data_cons = data_ps.copy()
+
+                        # Borro les claus que em surt l'arxiu de configuracio
+                        for d in self.descartar:
+                            del data_ps[d]
+                        for d in self.descartar:
+                            del data_cons[d]
+
                         # TODO Utilitzar zip per només fer un sol for
                         # Borro els camps inecessaris de ps i consums
                         for camp in self.classeps:
@@ -454,6 +446,8 @@ class Parsejador(object):
                         # Inserto el document consums al mongodb
                         self.insert_mongo(documentcons, collectionconsums)
                     else:
+                        for d in self.descartar:
+                            del data[d]
                         # Creo el diccionari per fer l'insert al mongo
                         document = data.dict[0]
                         # Id incremental
