@@ -14,13 +14,19 @@ import tempfile
 import pymongo
 import copy
 
-def parse_datetime(value, dataformat):
-    # Funcio per l'add_formatter converteixi de string a datetime
+def datetime_format(value, dataformat=None):
     try:
-        res = datetime.strptime(value, dataformat)
+        if dataformat:
+            res = datetime.strptime(value, dataformat)
+        else:
+            res = datetime.strptime(value, "%Y%m%d")
     except:
         res = None
     return res
+
+def parse_datetime(value):
+
+    return datetime_format(value)
 
 def parse_float(value):
     # Funcio per l'add_formatter converteixi valors en coma a float amb punt
@@ -203,10 +209,16 @@ class Parsejador(object):
         self.delimiter = conf.get('parser', 'delimiter')
         self.headers = conf.items('fields')
         self.descartar = conf.options('descartar')
-        self.classeps = conf.options('psdescartar')
-        self.classeconsums = conf.options('consumsdescartar')
+        try:
+            self.classeps = conf.options('psdescartar')
+            self.classeconsums = conf.options('consumsdescartar')
+            self.data_format = conf.get('parser', 'data_format')
+        except:
+            self.classeps = False
+            self.classeconsums = False
+            self.data_format = False
         self.primary_keys = conf.get('parser', 'primary_keys')
-        self.data_format = conf.get('parser', 'data_format')
+
         self.pkeys = self.primary_keys.split(',')
         try:
             self.num_fields = conf.get('parser', 'num_fields')
@@ -316,7 +328,7 @@ class Parsejador(object):
         data = tablib.Dataset()
         data.headers = headers_conf
 
-        # Millores: posar la cadena de lambda al fitxer de conf
+        # TODO: Millores: posar la cadena de lambda al fitxer de conf
         for he, v in zip(self.headers, vals_tipus):
             if v == 'float':
                 data.add_formatter(he[0],
@@ -326,10 +338,10 @@ class Parsejador(object):
                                    lambda a:
                                    a and int(parse_float(a)) or 0)
             if v == 'datetime':
-                data.add_formatter(he[0],
-                                   lambda a:
-                                   a and parse_datetime(a, self.data_format) or
-                                   0)
+                data.add_formatter(he[0], parse_datetime)
+                                   # lambda a:
+                                   # a and parse_datetime(a, self.data_format) or
+                                   # 0)
             if v == 'long':
                 data.add_formatter(he[0],
                                    lambda a: a and long(a) or 0)
