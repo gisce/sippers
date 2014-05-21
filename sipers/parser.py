@@ -55,9 +55,9 @@ MAGNITUDS = {
     'kWh': 1
 }
 
-
 class Parsejador(object):
     # Variables estatiques
+    arxiu = None
     directori = None
     dbname = None
     mongodb = None
@@ -79,11 +79,12 @@ class Parsejador(object):
     tmpdir = None
     data_format = None
 
-    def __init__(self, directori=None, dbname=None):
+    def __init__(self, arxiu, directori=None, dbname=None):
         # Parser del fitxer de SIPS
         #Afagar els arxius de un directori
         self.directori = directori
         self.dbname = dbname
+        self.arxiu = arxiu
 
     def extreu_arxiu(self, tail, head, tmp_dir):
         """Mètode per descomprimir el zip"""
@@ -101,7 +102,7 @@ class Parsejador(object):
         for fitxer in os.listdir(path):
             fparts = fitxer.split(".")
             print "fparts {}".format(fparts)
-            if fparts[-1] == 'ZIP':
+            if fparts[-1].upper() == 'ZIP':
                 llista_arxius.append(fitxer)
         return llista_arxius
 
@@ -229,10 +230,10 @@ class Parsejador(object):
 
         # Crear directori temporal
         try:
-            tmp_dir = tempfile.mkdtemp(dir=dirtmp)
-            self.extreu_arxiu(tail, directori, tmp_dir)
+            self.tmpdir = tempfile.mkdtemp(dir=dirtmp)
+            self.extreu_arxiu(tail, directori, self.tmpdir)
             # Buscar el fitxer extret
-            for (path, dirs, files) in os.walk(tmp_dir):
+            for (path, dirs, files) in os.walk(self.tmpdir):
                 if files:
                     # Guardar el fitxer i la mida
                     self.filecodificat = codecs.open(path+'/'+files[0], "r",
@@ -242,16 +243,8 @@ class Parsejador(object):
             self.flog.write("Error: a la extració del zip, info: {}"
                             .format(e.message))
             # Borrar el directori temporal
-            shutil.rmtree(tmp_dir)
+            shutil.rmtree(self.tmpdir)
             raise SystemExit
-        finally:
-            try:
-                # Borrar el directori temporal
-                shutil.rmtree(tmp_dir)
-            except OSError as exc:
-                if exc.errno != 2:
-                    raise SystemExit
-
         return True
 
     def connectamongo(self):
@@ -513,29 +506,61 @@ class Parsejador(object):
                     self.flog.write("Error, No s'ha trobat el fitxer de "
                                     "configuració correcte de "
                                     "forma automatica. {}".format(e.message))
-
-            self.load_conf(arxiu, directori)
-            self.carregar_mongo()
-
+            if self.fitxer_conf:
+                self.load_conf(arxiu, directori)
+                self.carregar_mongo()
+            else:
+                self.flog.write("Error, No s'ha trobat el fitxer de "
+                                    "configuració correcte de "
+                                    "forma automatica. {}".format(e.message))
         return True
 
-    def run(self, conf=False, selector=None):
-        llista_arxius = self.agafarxius(self.directori)
-        # Processar per cada un dels arxius zip
-        for arxiu in llista_arxius:
-            # Log per els errors de lectura
-            print "Arxiu:{}".format(arxiu)
-            try:
-                self.flog = open(arxiu + ".txt", "w")
-            except (OSError, IOError) as e:
-                print "Error al intentar obrir el fitxer de log {}".format(
-                    e.errno)
+    def rename_file(self, extension):
+        os.rename(self.directori+'/'+self.arxiu,
+                  self.directori+'/'+self.arxiu+'.'+extension)
+        return self.arxiu+'.'+extension
 
-            try:
-                if self.connectamongo():
-                    self.parser(arxiu, self.directori, conf, selector)
-                self.flog.write("Fitxer finalitzat")
-            except:
-                self.flog.write("Hi ha hagut algun error")
+    def start(self, conf=False, selector=None):
+        try:
+            self.flog = open(self.arxiu + ".txt", "w")
+            self.arxiu = self.rename_file('lock')
+            if self.connectamongo():
+                self.parser(self.arxiu, self.directori, conf, selector)
+                self.arxiu = self.rename_file('end')
+            self.flog.write("Fitxer finalitzat")
 
+        except (OSError, IOError) as e:
+            print "Error al intentar obrir el fitxer de log {}".format(
+                e.errno)
+        except:
+            self.flog.write("Hi ha hagut algun error")
+            self.arxiu = self.rename_file('error')
+        finally:
             self.flog.close()
+            try:
+                # Borrar el directori temporal
+                shutil.rmtree(self.tmpdir)
+            except OSError as exc:
+                if exc.errno != 2:
+                    raise SystemExit
+
+    # def run(self, conf=False, selector=None):
+    #     llista_arxius = self.agafarxius(self.directori)
+    #     # Processar per cada un dels arxius zip
+    #     for arxiu in llista_arxius:
+    #         # Log per els errors de lectura
+    #         print "Arxiu:{}".format(arxiu)
+    #         try:
+    #             self.flog = open(arxiu + ".txt", "w")
+    #         except (OSError, IOError) as e:
+    #             print "Error al intentar obrir el fitxer de log {}".format(
+    #                 e.errno)
+    #
+    #         try:
+    #             if self.connectamongo():
+    #                 self.parser(arxiu, self.directori, conf, selector)
+    #             self.flog.write("Fitxer finalitzat")
+    #         except:
+    #             self.flog.write("Hi ha hagut algun error")
+    #
+    #         self.flog.close()
