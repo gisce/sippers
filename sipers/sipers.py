@@ -2,7 +2,7 @@
 
 import os
 import time
-from parser import Parsejador
+from fitxer_sips import FitxerSips
 from datetime import datetime
 
 
@@ -35,8 +35,8 @@ def run(directori, dbname):
     for arxiu in llista_arxius:
         # Log per els errors de lectura
         print "Arxiu:{}".format(arxiu)
-        parser = Parsejador(arxiu=arxiu, directori=directori, dbname=dbname)
-        parser.start()
+        fitxer_sips = FitxerSips(arxiu=arxiu, directori=directori, dbname=dbname)
+        fitxer_sips.start()
 
 def main():
     import optparse

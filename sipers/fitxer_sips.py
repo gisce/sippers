@@ -55,7 +55,7 @@ MAGNITUDS = {
     'kWh': 1
 }
 
-class Parsejador(object):
+class FitxerSips(object):
     # Variables estatiques
     arxiu = None
     directori = None
@@ -78,6 +78,7 @@ class Parsejador(object):
     pkeys = None
     tmpdir = None
     data_format = None
+    parser = None
 
     def __init__(self, arxiu, directori=None, dbname=None):
         # Parser del fitxer de SIPS
@@ -85,6 +86,12 @@ class Parsejador(object):
         self.directori = directori
         self.dbname = dbname
         self.arxiu = arxiu
+        if re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
+                    self.arxiu):
+            import configs.endesa as parser
+            self.parser = parser()
+
+
 
     def extreu_arxiu(self, tail, head, tmp_dir):
         """Mètode per descomprimir el zip"""
@@ -228,10 +235,10 @@ class Parsejador(object):
         except:
             self.classes = False
 
-        # Crear directori temporal
+        #Crear directori temporal
         try:
             self.tmpdir = tempfile.mkdtemp(dir=dirtmp)
-            self.extreu_arxiu(tail, directori, self.tmpdir)
+            self.extreu_arxiu(arxiu, directori, self.tmpdir)
             # Buscar el fitxer extret
             for (path, dirs, files) in os.walk(self.tmpdir):
                 if files:
@@ -253,6 +260,7 @@ class Parsejador(object):
             client = MongoClient()
             # Base de dades
             self.mongodb = client[self.dbname]
+            self.parser.mongodb = self.mongodb
         except Exception as e:
             self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
                             "info: {}".format(e.message))
@@ -260,33 +268,12 @@ class Parsejador(object):
         return self.mongodb
 
     def carregar_mongo(self):
-        # Camps del conf
-        headers_conf = [h[0] for h in self.headers]
-        valores = [h[1] for h in self.headers]
-        vals = [v.split() for v in valores]
-        #Primera columna (tipus) dels valors
-        vals_tipus = [v[0] for v in vals]
-        vals_apa = [v[1] for v in vals]
-        # TODO: columnes obligatories o no, cal tractar casos
-        try:
-            vals_mag = [v[2] for v in vals]
-        except:
-            vals_mag = []
-        # agafar columna de classe per el cas de consum/sips al mateix arxiu
-        # TODO : treure aquesta columna? Ara ja es fa servir les dos options
-        # de la configuració.
-        if self.classes == 'giscedata_sips_ps/giscedata_sips_consums':
-            try:
-                vals_class = [v[3] for v in vals]
-            except:
-                vals_class = []
         # si tenim emplada fixa agafarem els valors de lultilma columa
         if self.delimiter == 'ampfix':
             try:
                 vals_long = [int(v[4]) for v in vals]
             except:
                 vals_long = []
-
         # Contador de linies
         count = 0
         # Per calcular la progressió
@@ -307,43 +294,6 @@ class Parsejador(object):
                             .format(self.classe, self.classes))
             raise SystemExit
 
-        # Comprovo que la collecció estigui creada, si no la creo
-        if not self.mongodb['counters'].count():
-            self.mongodb['counters'].save({"_id": self.classe, "counter": 1})
-
-        #Creo el dataset buit
-        data = tablib.Dataset()
-        data.headers = headers_conf
-
-        # TODO: Millores: posar la cadena de lambda al fitxer de conf
-        for he, v in zip(self.headers, vals_tipus):
-            if v == 'float':
-                data.add_formatter(he[0],
-                                   lambda a: a and parse_float(a) or 0)
-            if v == 'integer':
-                data.add_formatter(he[0],
-                                   lambda a:
-                                   a and int(parse_float(a)) or 0)
-            if v == 'datetime':
-                data.add_formatter(he[0], lambda a:
-                                   a and parse_datetime(a, self.data_format))
-            if v == 'long':
-                data.add_formatter(he[0],
-                                   lambda a: a and long(a) or 0)
-
-        # Passar a kW les potencies que estan en W
-        for he, v in zip(self.headers, vals_mag):
-            if v == 'Wh':
-                data.add_formatter(he[0],
-                                   lambda a:
-                                   a and float(a)/MAGNITUDS['Wh']
-                                   or 0)
-            elif v == 'kWh':
-                data.add_formatter(he[0],
-                                   lambda a:
-                                   a and float(a)/MAGNITUDS['kWh']
-                                   or 0)
-
         # Crear index per les primary_keys
         if self.classe == 'giscedata_sips_ps':
             self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
@@ -357,8 +307,7 @@ class Parsejador(object):
             self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
                 {"name": 1})""")
         else:
-            self.flog.write("Error: En fer l'index {}"
-                            )
+            self.flog.write("Error: En fer l'index {}")
             raise SystemExit
 
         # Llegeixo per tot el fitxer
@@ -483,7 +432,7 @@ class Parsejador(object):
         print "\nNumero de linies: {}".format(count)
         return True
 
-    def parser(self, arxiu, directori, conf=False, selector=None):
+    def parser_file(self, arxiu, directori, conf=False, selector=None):
         # Si ve conf comprovar que sigui una opció possible
         if conf not in self.get_available_conf() and conf:
             self.flog.write("Error, la configuració {} que ha entrat no es "
@@ -525,7 +474,7 @@ class Parsejador(object):
             self.flog = open(self.arxiu + ".txt", "w")
             self.arxiu = self.rename_file('lock')
             if self.connectamongo():
-                self.parser(self.arxiu, self.directori, conf, selector)
+                self.parser_file(self.arxiu, self.directori, conf, selector)
                 self.arxiu = self.rename_file('end')
             self.flog.write("Fitxer finalitzat")
 
