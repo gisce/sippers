@@ -89,10 +89,8 @@ class FitxerSips(object):
         self.arxiu = arxiu
         if re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
                     self.arxiu):
-            import configs.endesa as Parser
-            self.parser = Parser()
-
-
+            from configs.endesa import Endesa
+            self.parser = Endesa()
 
     def extreu_arxiu(self, tail, head, tmp_dir):
         """Mètode per descomprimir el zip"""
@@ -114,19 +112,6 @@ class FitxerSips(object):
                 llista_arxius.append(fitxer)
         return llista_arxius
 
-    def insert_mongo(self, document, collection):
-        # Afegeixo les entrades
-        try:
-            pvalues = [document[k] for k in self.pkeys]
-            query = dict(zip(self.pkeys, pvalues))
-
-            res = collection.update(query, document)
-            if res['updatedExisting'] is False:
-                collection.insert(document)
-        except pymongo.errors.OpertionFailure:
-            self.flog.write("Error: A l'insert del mongodb")
-
-        return True
 
     def get_available_conf(self):
         """Aquest mètode retorna una llista amb tots els tipus de fitxers que
@@ -234,15 +219,14 @@ class FitxerSips(object):
         return self.mongodb
 
     def carregar_mongo(self):
+        # Carregar el mongo
+        self.parser.load()
         # Contador de linies
         count = 0
         # Per calcular la progressió
         sumatori = 0
-        # Usuari del mongodb
-        user = 'default'
-
         # Llegeixo per tot el fitxer
-        with codecs.open(self.files[0], "r","iso-8859-15") as f:
+        with codecs.open(self.files[0], "r", "iso-8859-15") as f:
             for linia in f:
                 self.parser.parse_line(linia)
                 # Actualitzo contador de linies, sumatori i tantpercert completat
@@ -257,35 +241,8 @@ class FitxerSips(object):
             return True
 
     def parser_file(self, arxiu, directori, conf=False, selector=None):
-        # Si ve conf comprovar que sigui una opció possible
-        if conf not in self.get_available_conf() and conf:
-            self.flog.write("Error, la configuració {} que ha entrat no es "
-                            "troba als fitxers de configuració".format(conf))
-            raise SystemExit
-        elif conf in self.get_available_conf() and conf:
-            self.fitxer_conf = conf
-        # Si no passem cap configuracio predeterminada
-        if not conf:
-            if selector:
-                try:
-                    self.detectaconfselect(selector)
-                except Exception as e:
-                    self.flog.write("Error, en detectar la configuracio amb "
-                                    "el selector. {}".format(e.message))
-            else:
-                try:
-                    self.detectaconf(arxiu)
-                except Exception as e:
-                    self.flog.write("Error, No s'ha trobat el fitxer de "
-                                    "configuració correcte de "
-                                    "forma automatica. {}".format(e.message))
-            if self.fitxer_conf:
-                self.load_conf(arxiu, directori)
-                self.carregar_mongo()
-            else:
-                self.flog.write("Error, No s'ha trobat el fitxer de "
-                                    "configuració correcte de "
-                                    "forma automatica. {}".format(e.message))
+        self.load_conf(arxiu, directori)
+        self.carregar_mongo()
         return True
 
     def rename_file(self, extension):
@@ -316,24 +273,3 @@ class FitxerSips(object):
             except OSError as exc:
                 if exc.errno != 2:
                     raise SystemExit
-
-    # def run(self, conf=False, selector=None):
-    #     llista_arxius = self.agafarxius(self.directori)
-    #     # Processar per cada un dels arxius zip
-    #     for arxiu in llista_arxius:
-    #         # Log per els errors de lectura
-    #         print "Arxiu:{}".format(arxiu)
-    #         try:
-    #             self.flog = open(arxiu + ".txt", "w")
-    #         except (OSError, IOError) as e:
-    #             print "Error al intentar obrir el fitxer de log {}".format(
-    #                 e.errno)
-    #
-    #         try:
-    #             if self.connectamongo():
-    #                 self.parser(arxiu, self.directori, conf, selector)
-    #             self.flog.write("Fitxer finalitzat")
-    #         except:
-    #             self.flog.write("Hi ha hagut algun error")
-    #
-    #         self.flog.close()

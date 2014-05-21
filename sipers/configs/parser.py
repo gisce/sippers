@@ -46,11 +46,13 @@ class Parser(object):
     data = None
     mongodb = None
     fields = None
+    pkeys = None
+    date_format = None
 
     def __init__(self, mongodb=None):
         #Creo el dataset buit
         self.data = tablib.Dataset()
-        self.mongodb =mongodb
+        self.mongodb = mongodb
 
 
     def load(self):
@@ -91,7 +93,7 @@ class Parser(object):
                 self.data.add_formatter(field[0],
                                         lambda a:
                                         a and parse_datetime(a,
-                                                             self.data_format))
+                                                             self.date_format))
             if v == 'long':
                 self.data.add_formatter(field[0],
                                         lambda a: a and long(a) or 0)
@@ -108,9 +110,7 @@ class Parser(object):
                                         a and float(a)/MAGNITUDS['kWh'] or 0)
 
     def validate_mongo_counters(self):
-        # Comprovo que la collecció estigui creada, si no la creo
-        if not self.mongodb['counters'].count():
-            self.mongodb['counters'].save({"_id": self.classe, "counter": 1})
+        raise NotImplementedError( "Should have implemented this")
 
     def prepare_mongo(self):
         raise NotImplementedError( "Should have implemented this")

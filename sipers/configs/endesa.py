@@ -1,4 +1,4 @@
-from sipers.configs.parser import Parser
+from parser import Parser
 from datetime import datetime
 
 class Endesa(Parser):
@@ -6,13 +6,13 @@ class Endesa(Parser):
     delimiter = ';'
     pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)'
     num_fields = 43
-    primary_keys = 'name'
     date_format = '%Y%m%d'
     descartar = ['facturacio', 'salt']
     collection = None
 
-    def __init__(self, monogdb):
-        super(Parser, self).__init__(monogdb)
+    def __init__(self, mongodb=None):
+        super(Parser, self).__init__()
+        self.pkeys = ['name', ]
         self.fields = [
             ('name', {'type': 'char', 'position': 0, 'magnituds': False}),
             ('distri', {'type': "char", "position": 1, 'magnituds': False}),
@@ -95,15 +95,16 @@ class Endesa(Parser):
             self.magnitudes.append(field[1]['magnituds'])
 
     def validate_mongo_counters(self):
-        super(Parser, self).validate_mongo_counters()
+        # Comprovo que la colletion estigui creada, si no la creo
+        if not self.mongodb['counters'].count():
+            self.mongodb['counters'].save({"_id": "giscedata_sips_ps",
+                                           "counter": 1})
         self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex({"name": 1})""")
 
     def prepare_mongo(self):
         self.collection = self.mongodb.giscedata_sips_ps
 
     def parse_line(self, line):
-        #raise NotImplementedError( "Should have implemented this")
-
         slinia = tuple(line.split(self.delimiter))
         slinia = map(lambda s: s.strip(), slinia)
 
@@ -111,9 +112,9 @@ class Endesa(Parser):
         user = 'default'
         try:
             # Llista dels valors del tros que agafem dins la linia
-            self.data.append(line)
-            if self.num_fields and len(line) != int(self.num_fields):
-                print 'ERROR' #######################
+            self.data.append(slinia)
+            if self.num_fields and len(slinia) != int(self.num_fields):
+                print "Row lenght incorrect"
             for d in self.descartar:
                 del self.data[d]
             # Creo el diccionari per fer l'insert al mongo
@@ -133,14 +134,13 @@ class Endesa(Parser):
 
             #Borrar els valors del tros
             self.data.wipe()
-            #Torno a establir les capçaleres
+            #Torno a establir les headers
             self.data.headers = self.headers_conf
         except Exception as e:
-            print 'ERROR' #######################
             #Faig el wipe per no extendre l'error
             self.data.wipe()
-            #Torno a establir les capçaleres
             self.data.headers = self.headers_conf
+            print "Row Error"
 
 
 
