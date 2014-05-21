@@ -1,4 +1,5 @@
 from sipers.configs.parser import Parser
+from datetime import datetime
 
 class Endesa(Parser):
 
@@ -8,23 +9,7 @@ class Endesa(Parser):
     primary_keys = 'name'
     date_format = '%Y%m%d'
     descartar = ['facturacio', 'salt']
-
-    def load_config(self):
-        for field in self.fields:
-            self.types.append(field[1]['type'])
-            self.header_conf.append(field[0])
-            self.positions.append(field[1]['position'])
-            self.magnitudes.append(field[1]['magnituds'])
-
-    def validate_mongo_counters(self):
-        super(Parser, self).validate_monogo_counters()
-        self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex({"name": 1})""")
-
-    def prepare_mongo(self):
-        self.collection = self.mongodb.giscedata_sips_ps
-
-    def parse_line(self, line):
-        raise NotImplementedError( "Should have implemented this")
+    collection = None
 
     def __init__(self, monogdb):
         super(Parser, self).__init__(monogdb)
@@ -100,6 +85,65 @@ class Endesa(Parser):
             ('facturacio',
              {'type': "char", "position": 41, 'magnituds': False}),
             ('salt', {'type': "char", "position": 42, 'magnituds': False}), ]
+
+
+    def load_config(self):
+        for field in self.fields:
+            self.types.append(field[1]['type'])
+            self.headers_conf.append(field[0])
+            self.positions.append(field[1]['position'])
+            self.magnitudes.append(field[1]['magnituds'])
+
+    def validate_mongo_counters(self):
+        super(Parser, self).validate_mongo_counters()
+        self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex({"name": 1})""")
+
+    def prepare_mongo(self):
+        self.collection = self.mongodb.giscedata_sips_ps
+
+    def parse_line(self, line):
+        #raise NotImplementedError( "Should have implemented this")
+
+        slinia = tuple(line.split(self.delimiter))
+        slinia = map(lambda s: s.strip(), slinia)
+
+        # Usuari del mongodb
+        user = 'default'
+        try:
+            # Llista dels valors del tros que agafem dins la linia
+            self.data.append(line)
+            if self.num_fields and len(line) != int(self.num_fields):
+                print 'ERROR' #######################
+            for d in self.descartar:
+                del self.data[d]
+            # Creo el diccionari per fer l'insert al mongo
+            document = self.data.dict[0]
+            # Id incremental
+            counter = self.mongodb['counters'].find_and_modify(
+                {'_id': 'giscedata_sips_ps'},
+                {'$inc': {'counter': 1}})
+            # Update del index
+            document.update(
+                {'id': counter['counter'],
+                 'create_uid': user,
+                 'create_date': datetime.now()}
+            )
+            # Inserto el document al mongodb
+            self.insert_mongo(document, self.collection)
+
+            #Borrar els valors del tros
+            self.data.wipe()
+            #Torno a establir les capçaleres
+            self.data.headers = self.headers_conf
+        except Exception as e:
+            print 'ERROR' #######################
+            #Faig el wipe per no extendre l'error
+            self.data.wipe()
+            #Torno a establir les capçaleres
+            self.data.headers = self.headers_conf
+
+
+
 
 
 

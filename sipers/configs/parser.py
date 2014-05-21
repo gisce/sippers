@@ -40,7 +40,7 @@ MAGNITUDS = {
 
 class Parser(object):
     types = []
-    header_conf = []
+    headers_conf = []
     positions = []
     magnitudes = []
     data = None
@@ -73,7 +73,6 @@ class Parser(object):
                 collection.insert(document)
         except pymongo.errors.OpertionFailure:
             self.flog.write("Error: A l'insert del mongodb")
-
         return True
 
     def prepare_data_set(self):
@@ -107,6 +106,7 @@ class Parser(object):
                 self.data.add_formatter(field[0],
                                         lambda a:
                                         a and float(a)/MAGNITUDS['kWh'] or 0)
+
     def validate_mongo_counters(self):
         # Comprovo que la collecció estigui creada, si no la creo
         if not self.mongodb['counters'].count():
@@ -117,8 +117,6 @@ class Parser(object):
 
     def parse_line(self, line):
         raise NotImplementedError( "Should have implemented this")
-
-
 
 
 

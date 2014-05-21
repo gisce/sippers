@@ -79,6 +79,7 @@ class FitxerSips(object):
     tmpdir = None
     data_format = None
     parser = None
+    files = []
 
     def __init__(self, arxiu, directori=None, dbname=None):
         # Parser del fitxer de SIPS
@@ -88,8 +89,8 @@ class FitxerSips(object):
         self.arxiu = arxiu
         if re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
                     self.arxiu):
-            import configs.endesa as parser
-            self.parser = parser()
+            import configs.endesa as Parser
+            self.parser = Parser()
 
 
 
@@ -201,40 +202,6 @@ class FitxerSips(object):
     def load_conf(self, arxiu, directori, dirtmp=None):
         """Mètode per agafar valors de la configuració, crear un directori
         temporal """
-        head, tail = os.path.split(arxiu)
-        conf = ConfigParser.RawConfigParser()
-        conf.readfp(open("configs/"+self.fitxer_conf))
-
-        # Valors de la configuracio
-        # TODO : fer que tots els camps siguin obligatoris o tractar perque
-        # puguin ser-hi o no
-        self.delimiter = conf.get('parser', 'delimiter')
-        self.headers = conf.items('fields')
-        self.descartar = conf.options('descartar')
-        try:
-            self.classeps = conf.options('psdescartar')
-            self.classeconsums = conf.options('consumsdescartar')
-            self.data_format = conf.get('parser', 'data_format')
-        except:
-            self.classeps = False
-            self.classeconsums = False
-            self.data_format = False
-        self.primary_keys = conf.get('parser', 'primary_keys')
-
-        self.pkeys = self.primary_keys.split(',')
-        try:
-            self.num_fields = conf.get('parser', 'num_fields')
-        except:
-            self.num_fields = False
-        try:
-            self.classe = conf.get('parser', 'class')
-        except:
-            self.classe = False
-        try:
-            self.classes = conf.get('parser', 'classes')
-        except:
-            self.classes = False
-
         #Crear directori temporal
         try:
             self.tmpdir = tempfile.mkdtemp(dir=dirtmp)
@@ -243,8 +210,7 @@ class FitxerSips(object):
             for (path, dirs, files) in os.walk(self.tmpdir):
                 if files:
                     # Guardar el fitxer i la mida
-                    self.filecodificat = codecs.open(path+'/'+files[0], "r",
-                                                     "iso-8859-15")
+                    self.files.append(path+'/'+files[0])
                     self.midafitxer = os.stat(path+'/'+files[0]).st_size
         except Exception as e:
             self.flog.write("Error: a la extració del zip, info: {}"
@@ -268,12 +234,6 @@ class FitxerSips(object):
         return self.mongodb
 
     def carregar_mongo(self):
-        # si tenim emplada fixa agafarem els valors de lultilma columa
-        if self.delimiter == 'ampfix':
-            try:
-                vals_long = [int(v[4]) for v in vals]
-            except:
-                vals_long = []
         # Contador de linies
         count = 0
         # Per calcular la progressió
@@ -281,156 +241,20 @@ class FitxerSips(object):
         # Usuari del mongodb
         user = 'default'
 
-        # Afago la coleccio que vull
-        if self.classe == 'giscedata_sips_ps':
-            collection = self.mongodb.giscedata_sips_ps
-        elif self.classe == 'giscedata_sips_consums':
-            collection = self.mongodb.giscedata_sips_consums
-        elif self.classes == 'giscedata_sips_ps/giscedata_sips_consums':
-            collectionps = self.mongodb.giscedata_sips_ps
-            collectionconsums = self.mongodb.giscedata_sips_consums
-        else:
-            self.flog.write("Error: No es reconeix la collection {}, {}"
-                            .format(self.classe, self.classes))
-            raise SystemExit
-
-        # Crear index per les primary_keys
-        if self.classe == 'giscedata_sips_ps':
-            self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
-                {"name": 1})""")
-        elif self.classe == 'giscedata_sips_consums':
-            self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
-                {"name": 1})""")
-        elif self.classes == 'giscedata_sips_ps/giscedata_sips_consums':
-            self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
-                {"name": 1})""")
-            self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
-                {"name": 1})""")
-        else:
-            self.flog.write("Error: En fer l'index {}")
-            raise SystemExit
-
         # Llegeixo per tot el fitxer
-        while self.filecodificat.tell() < self.midafitxer:
-            # Tracto les dades del fitxer linia per linia
-            linia = self.filecodificat.readline()
-            # Si es d'amplada fixe tractar diferent que quan
-            # tenim un delimitador
-            if self.delimiter != 'ampfix':
-                slinia = tuple(linia.split(self.delimiter))
-                slinia = map(lambda s: s.strip(), slinia)
-            else:
-                slinia = tuple(slices(linia, *vals_long))
-                slinia = map(lambda s: s.strip(), slinia)
+        with codecs.open(self.files[0], "r","iso-8859-15") as f:
+            for linia in f:
+                self.parser.parse_line(linia)
+                # Actualitzo contador de linies, sumatori i tantpercert completat
+                count += 1
+                sumatori += len(linia)
+                tantpercent = float(sumatori) / self.midafitxer * 100.0
 
-            # Contador del tros de la linia
-            contadortroslinia = 0
-            # Llista de les posicions de les capçaleres segons la configuració
-            position = [eval(num, {"n": contadortroslinia}) for num in vals_apa]
+                sys.stdout.write("\r%d%%" % int(tantpercent))
+                sys.stdout.flush()
 
-            # llista dels trossos dels sips
-            data_ps = []
-
-            # Itero per els trossos de la linia
-            for i in range(0, len(slinia), len(position)):
-                try:
-                    # Llista dels valors del tros que agafem dins la linia
-                    datal = [slinia[p] for p in position]
-                    data.append(datal)
-                    if self.num_fields and len(datal) != int(self.num_fields):
-                        self.flog.write("Longitud de la fila {} incorrecte\n"
-                                        "len_data:{}, self.num_fields:{}"
-                                        .format(count, len(datal),
-                                                self.num_fields))
-
-                    # Comprovar si el fitxer es amb consums i sips junts o no
-                    if self.classes:
-                        # Sips i consums junts
-                        # Copies de l'objecte Dataset de ps i consums
-                        data_ps = data.dict[0].copy()
-                        data_cons = data_ps.copy()
-
-                        # Borro les claus que em surt l'arxiu de configuracio
-                        for d in self.descartar:
-                            del data_ps[d]
-                        for d in self.descartar:
-                            del data_cons[d]
-
-                        # TODO Utilitzar zip per només fer un sol for
-                        # Borro els camps inecessaris de ps i consums
-                        for camp in self.classeps:
-                            del data_ps[camp]
-                        for camp in self.classeconsums:
-                            del data_cons[camp]
-                        # Creo els diccionaris per insertar al mongo
-                        documentps = data_ps
-                        documentcons = data_cons
-                        # Creo els ids incrementals per les dos taules
-                        counterps = self.mongodb['counters'].find_and_modify(
-                            {'_id': 'giscedata_sips_ps'},
-                            {'$inc': {'counter': 1}})
-                        countercons = self.mongodb['counters'].find_and_modify(
-                            {'_id': 'giscedata_sips_consums'},
-                            {'$inc': {'counter': 1}})
-                        # Update del index
-                        documentps.update(
-                            {'id': counterps['counter'],
-                             'create_uid': user,
-                             'create_date': datetime.now()}
-                        )
-                        documentcons.update(
-                            {'id': countercons['counter'],
-                             'create_uid': user,
-                             'create_date': datetime.now()}
-                        )
-                        # Inserto el document sips al mongodb
-                        self.insert_mongo(documentps, collectionps)
-                        # Inserto el document consums al mongodb
-                        self.insert_mongo(documentcons, collectionconsums)
-                    else:
-                        for d in self.descartar:
-                            del data[d]
-                        # Creo el diccionari per fer l'insert al mongo
-                        document = data.dict[0]
-                        # Id incremental
-                        counter = self.mongodb['counters'].find_and_modify(
-                            {'_id': self.classe},
-                            {'$inc': {'counter': 1}})
-                        # Update del index
-                        document.update(
-                            {'id': counter['counter'],
-                             'create_uid': user,
-                             'create_date': datetime.now()}
-                        )
-                        # Inserto el document al mongodb
-                        self.insert_mongo(document, collection)
-
-                    #Borrar els valors del tros
-                    data.wipe()
-                    #Torno a establir les capçaleres
-                    data.headers = headers_conf
-                except Exception as e:
-                    self.flog.write("Error a la fila {}, "
-                                    "info: {}\n".format(count, e.message))
-                    #Faig el wipe per no extendre l'error
-                    data.wipe()
-                    #Torno a establir les capçaleres
-                    data.headers = headers_conf
-
-                # Actualizo el contador del tros i les posicions
-                contadortroslinia += 1
-                position = [eval(num, {"n": contadortroslinia}) for num in
-                            vals_apa]
-            # Actualitzo contador de linies, sumatori i tantpercert completat
-            count += 1
-            sumatori += len(linia)
-            tantpercent = float(sumatori) / self.midafitxer * 100.0
-
-            sys.stdout.write("\r%d%%" % int(tantpercent))
-            sys.stdout.flush()
-
-        print "\nNumero de linies: {}".format(count)
-        return True
+            print "\nNumero de linies: {}".format(count)
+            return True
 
     def parser_file(self, arxiu, directori, conf=False, selector=None):
         # Si ve conf comprovar que sigui una opció possible
