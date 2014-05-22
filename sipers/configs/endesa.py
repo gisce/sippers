@@ -13,7 +13,7 @@ class Endesa(Parser):
     def __init__(self, mongodb=None):
         super(Parser, self).__init__()
         self.pkeys = ['name', ]
-        self.fields = [
+        self.fields_ps = [
             ('name', {'type': 'char', 'position': 0, 'magnituds': False}),
             ('distri', {'type': "char", "position": 1, 'magnituds': False}),
             ('cod_distri', {'type': "char", "position": 2, 'magnituds': False}),
@@ -86,6 +86,7 @@ class Endesa(Parser):
              {'type': "char", "position": 41, 'magnituds': False}),
             ('salt', {'type': "char", "position": 42, 'magnituds': False}), ]
 
+        self.fields = self.fields_ps
 
     def load_config(self):
         for field in self.fields:
@@ -96,7 +97,7 @@ class Endesa(Parser):
 
     def validate_mongo_counters(self):
         # Comprovo que la colletion estigui creada, si no la creo
-        if not self.mongodb['counters'].count():
+        if not self.mongodb['counters'].find({"_id": "giscedata_sips_ps"}):
             self.mongodb['counters'].save({"_id": "giscedata_sips_ps",
                                            "counter": 1})
         self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex({"name": 1})""")

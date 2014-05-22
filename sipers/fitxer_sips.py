@@ -91,6 +91,16 @@ class FitxerSips(object):
                     self.arxiu):
             from configs.endesa import Endesa
             self.parser = Endesa()
+        elif re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)',
+                    self.arxiu):
+            from configs.endesacons import EndesaCons
+            self.parser = EndesaCons()
+        elif re.match('HGSBKA_E0021_TXT.\.(zip|ZIP)',
+                    self.arxiu):
+            from configs.iberdrola import Iberdrola
+            self.parser = Iberdrola()
+        else:
+            raise SystemError
 
     def extreu_arxiu(self, tail, head, tmp_dir):
         """Mètode per descomprimir el zip"""
@@ -266,10 +276,5 @@ class FitxerSips(object):
             self.flog.write("Hi ha hagut algun error")
             self.arxiu = self.rename_file('error')
         finally:
+            shutil.rmtree(self.tmpdir)
             self.flog.close()
-            try:
-                # Borrar el directori temporal
-                shutil.rmtree(self.tmpdir)
-            except OSError as exc:
-                if exc.errno != 2:
-                    raise SystemExit

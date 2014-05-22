@@ -1,7 +1,7 @@
 from parser import Parser
 from datetime import datetime
 
-class Endesa(Parser):
+class Iberdrola(Parser):
 
     delimiter = 'ampfix'
     pattern = 'HGSBKA_E0021_TXT.\.(zip|ZIP)'
@@ -13,7 +13,7 @@ class Endesa(Parser):
     def __init__(self, mongodb=None):
         super(Parser, self).__init__()
         self.pkeys = ['name', ]
-        self.fieldsps = [
+        self.fields_ps = [
             ('name', {'type': 'char', 'position': 0, 'magnituds': False,
                       'collection': 'ps', 'length': 22}),
             ('direccio', {'type': "char", "position": 1, 'magnituds': False,
@@ -137,7 +137,7 @@ class Endesa(Parser):
             ('trimestre_sub', {'type': "char", "position": 44,
                                'magnituds': False, 'collection': 'ps',
                                'length': 1}), ]
-        self.fieldsconsums = [
+        self.fields_consums = [
             ('any_consum', {'type': "datetime", "position": 45,
                             'magnituds': False, 'collection': 'consum',
                             'length': 4}),
@@ -192,6 +192,8 @@ class Endesa(Parser):
             ('potencia_6', {'type': "float", "position": 68, 'magnituds': "kWh",
                             'collection': 'consum', 'length': 11}), ]
 
+        self.fields = self.fields_ps + self.fields_consums
+
     def slices(self, *args):
         # La llista amb les mides dels camps entren per els args.
         position = 0
@@ -209,8 +211,11 @@ class Endesa(Parser):
 
     def validate_mongo_counters(self):
         # Comprovo que la colletion estigui creada, si no la creo
-        if not self.mongodb['counters'].count():
-            self.mongodb['counters'].save({"_id": "giscedata_sips_ps_consum",
+        if not self.mongodb['counters'].find({"_id": "giscedata_sips_ps"}).count():
+            self.mongodb['counters'].save({"_id": "giscedata_sips_ps",
+                                           "counter": 1})
+        if not self.mongodb['counters'].find({"_id": "giscedata_sips_consums"}).count():
+            self.mongodb['counters'].save({"_id": "giscedata_sips_consum",
                                            "counter": 1})
         self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
             {"name": 1})""")
@@ -293,9 +298,3 @@ class Endesa(Parser):
                 self.data.wipe()
                 self.data.headers = self.headers_conf
                 print "Row Error"
-
-
-
-
-
-
