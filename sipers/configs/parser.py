@@ -43,6 +43,7 @@ class Parser(object):
     headers_conf = []
     positions = []
     magnitudes = []
+    vals_long = []
     data = None
     mongodb = None
     fields = None
