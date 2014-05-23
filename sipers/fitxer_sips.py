@@ -67,6 +67,7 @@ class FitxerSips(object):
     primary_keys = None
     midafitxer = None
     flog = None
+    log = None
     pkeys = None
     tmpdir = None
     data_format = None
@@ -136,6 +137,12 @@ class FitxerSips(object):
                 self.dbname = conf.get('global', 'dbname')
                 self.tmpdir = conf.get('global', 'tmp_dir')
             else:
+                self.log.estat = 'Error'
+                self.log.escriure_message_mongo('ERROR', "Error, no s'ha "
+                                                         "trobat cap "
+                                                         "coincidencia en les "
+                                                         "confs dels servidors")
+                self.log.escriure_mongo()
                 print "Error, no s'ha trobat cap coincidencia en les confs" \
                       "dels servidors"
                 return False
@@ -200,6 +207,12 @@ class FitxerSips(object):
                     self.files.append(path+'/'+files[0])
                     self.midafitxer = os.stat(path+'/'+files[0]).st_size
         except Exception as e:
+            self.log.estat = 'Error'
+            self.log.escriure_message_mongo('ERROR', "La extració del zip. "
+                                                     "Info: "
+                                                     "{}\n".format(e.message))
+            self.log.escriure_mongo()
+
             self.flog.write("Error: a la extració del zip, info: {}"
                             .format(e.message))
             # Borrar el directori temporal
@@ -215,6 +228,12 @@ class FitxerSips(object):
             self.mongodb = client[self.dbname]
             self.parser.mongodb = self.mongodb
         except Exception as e:
+            self.log.estat = 'Error'
+            self.log.escriure_message_mongo('ERROR', "No s'ha pogut connectar a "
+                                                     "la base de dades. Info: "
+                                                     "{}\n ".format(e.message))
+            self.log.escriure_mongo()
+
             self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
                             "info: {}".format(e.message))
             raise SystemExit
@@ -227,20 +246,32 @@ class FitxerSips(object):
         count = 0
         # Per calcular la progressió
         sumatori = 0
-        # Llegeixo per tot el fitxer
-        with codecs.open(self.files[0], "r", "iso-8859-15") as f:
-            for linia in f:
-                self.parser.parse_line(linia)
-                # Actualitzo contador de linies, sumatori i tantpercert completat
-                count += 1
-                sumatori += len(linia)
-                tantpercent = float(sumatori) / self.midafitxer * 100.0
 
-                sys.stdout.write("\r%d%%" % int(tantpercent))
-                sys.stdout.flush()
+        # recorro per tots els fitxers extrets
+        for arxiu in self.files:
+            # Llegeixo per tot el fitxer
+            with codecs.open(arxiu, "r", "iso-8859-15") as f:
+                for linia in f:
+                    self.parser.parse_line(linia)
+                    # Actualitzo contador de linies, sumatori i tantpercert completat
+                    count += 1
+                    sumatori += len(linia)
+                    tantpercent = float(sumatori) / self.midafitxer * 100.0
 
-            print "\nNumero de linies: {}".format(count)
-            return True
+                    self.log.progres = float(tantpercent)
+                    self.log.estat = 'Important linia'
+                    self.log.escriure_mongo()
+
+                    sys.stdout.write("\r%d%%" % int(tantpercent))
+                    sys.stdout.flush()
+
+                self.log.estat = "Finalitzat"
+                self.log.escriure_message_mongo('INFO', "S'ha acabat de "
+                                                        "processar l'arxiu.")
+                self.log.escriure_mongo()
+
+                print "\nNumero de linies: {}".format(count)
+                return True
 
     def parser_file(self, arxiu, directori, conf=False, selector=None):
         self.load_conf(arxiu, directori)
@@ -255,16 +286,41 @@ class FitxerSips(object):
     def start(self, conf=False, selector=None):
         try:
             self.flog = open(self.arxiu + ".txt", "w")
+            nom_arxiu = self.arxiu
             self.arxiu = self.rename_file('lock')
             if self.connectamongo():
+                # Import del fitxer de log
+                from configs.log_fitxers import LogFitxers
+                self.log = LogFitxers(self.mongodb, nom_arxiu, 'Start',
+                                      0, str(datetime.now()))
+                self.log.escriure_message_mongo('INFO', "------------ Starting the process ------------")
+                self.log.escriure_mongo()
+
                 self.parser_file(self.arxiu, self.directori, conf, selector)
                 self.arxiu = self.rename_file('end')
+
+            self.log.estat = "Fitxer finalitzat"
+            self.log.escriure_message_mongo('INFO', "------------ Fitxer finalitzat ------------")
+            self.log.escriure_mongo()
+
             self.flog.write("Fitxer finalitzat")
 
+
         except (OSError, IOError) as e:
+            self.log.estat = 'Error'
+            self.log.escriure_message_mongo('ERROR', " Al intentar "
+                                                     "obrir el fitxer.\n "
+                                                     "{}".format(e.message))
+            self.log.escriure_mongo()
+
+
             print "Error al intentar obrir el fitxer de log {}".format(
                 e.errno)
-        except:
+        except Exception as e:
+            self.log.estat = 'Error'
+            self.log.escriure_message_mongo('ERROR', "{}".format(e.message))
+            self.log.escriure_mongo()
+
             self.flog.write("Hi ha hagut algun error")
             self.arxiu = self.rename_file('error')
         finally:
