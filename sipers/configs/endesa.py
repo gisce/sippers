@@ -1,5 +1,6 @@
 from parser import Parser
 from datetime import datetime
+import copy
 
 class Endesa(Parser):
 
@@ -112,14 +113,15 @@ class Endesa(Parser):
         # Usuari del mongodb
         user = 'default'
         try:
+            data = copy.deepcopy(self.data)
             # Llista dels valors del tros que agafem dins la linia
-            self.data.append(slinia)
+            data.append(slinia)
             if self.num_fields and len(slinia) != int(self.num_fields):
                 print "Row lenght incorrect"
             for d in self.descartar:
-                del self.data[d]
+                del data[d]
             # Creo el diccionari per fer l'insert al mongo
-            document = self.data.dict[0]
+            document = data.dict[0]
             # Id incremental
             counter = self.mongodb['counters'].find_and_modify(
                 {'_id': 'giscedata_sips_ps'},
@@ -133,14 +135,14 @@ class Endesa(Parser):
             # Inserto el document al mongodb
             self.insert_mongo(document, self.collection)
 
-            #Borrar els valors del tros
-            self.data.wipe()
-            #Torno a establir les headers
-            self.data.headers = self.headers_conf
+            # #Borrar els valors del tros
+            # self.data.wipe()
+            # #Torno a establir les headers
+            # self.data.headers = self.headers_conf
         except Exception as e:
-            #Faig el wipe per no extendre l'error
-            self.data.wipe()
-            self.data.headers = self.headers_conf
+            # #Faig el wipe per no extendre l'error
+            # self.data.wipe()
+            # self.data.headers = self.headers_conf
             print "Row Error"
 
 
