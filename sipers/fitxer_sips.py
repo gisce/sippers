@@ -85,11 +85,11 @@ class FitxerSips(object):
             from configs.endesa import Endesa
             self.parser = Endesa()
         elif re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)',
-                    self.arxiu):
+                      self.arxiu):
             from configs.endesacons import EndesaCons
             self.parser = EndesaCons()
         elif re.match('HGSBKA_E0021_TXT.\.(zip|ZIP)',
-                    self.arxiu):
+                      self.arxiu):
             from configs.iberdrola import Iberdrola
             self.parser = Iberdrola()
         else:
@@ -137,12 +137,12 @@ class FitxerSips(object):
                 self.dbname = conf.get('global', 'dbname')
                 self.tmpdir = conf.get('global', 'tmp_dir')
             else:
-                self.log.estat = 'Error'
-                self.log.escriure_message_mongo('ERROR', "Error, no s'ha "
-                                                         "trobat cap "
-                                                         "coincidencia en les "
-                                                         "confs dels servidors")
-                self.log.escriure_mongo()
+                # self.log.estat = 'Error'
+                # self.log.escriure_message_mongo('ERROR', "Error, no s'ha "
+                #                                          "trobat cap "
+                #                                          "coincidencia en les "
+                #                                          "confs dels servidors")
+                # self.log.escriure_mongo()
                 print "Error, no s'ha trobat cap coincidencia en les confs" \
                       "dels servidors"
                 return False
@@ -207,11 +207,11 @@ class FitxerSips(object):
                     self.files.append(path+'/'+files[0])
                     self.midafitxer = os.stat(path+'/'+files[0]).st_size
         except Exception as e:
-            self.log.estat = 'Error'
-            self.log.escriure_message_mongo('ERROR', "La extració del zip. "
-                                                     "Info: "
-                                                     "{}\n".format(e.message))
-            self.log.escriure_mongo()
+            # self.log.estat = 'Error'
+            # self.log.escriure_message_mongo('ERROR', "La extració del zip. "
+            #                                          "Info: "
+            #                                          "{}\n".format(e.message))
+            # self.log.escriure_mongo()
 
             self.flog.write("Error: a la extració del zip, info: {}"
                             .format(e.message))
@@ -228,11 +228,11 @@ class FitxerSips(object):
             self.mongodb = client[self.dbname]
             self.parser.mongodb = self.mongodb
         except Exception as e:
-            self.log.estat = 'Error'
-            self.log.escriure_message_mongo('ERROR', "No s'ha pogut connectar a "
-                                                     "la base de dades. Info: "
-                                                     "{}\n ".format(e.message))
-            self.log.escriure_mongo()
+            # self.log.estat = 'Error'
+            # self.log.escriure_message_mongo('ERROR', "No s'ha pogut connectar a "
+            #                                          "la base de dades. Info: "
+            #                                          "{}\n ".format(e.message))
+            # self.log.escriure_mongo()
 
             self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
                             "info: {}".format(e.message))
@@ -258,17 +258,18 @@ class FitxerSips(object):
                     sumatori += len(linia)
                     tantpercent = float(sumatori) / self.midafitxer * 100.0
 
-                    self.log.progres = float(tantpercent)
-                    self.log.estat = 'Important linia'
-                    self.log.escriure_mongo()
+                    self.update_progress(tantpercent)
+                    # self.progres = float(tantpercent)
+                    # self.estat = 'Important linia'
+                    # self.log.escriure_mongo()
 
                     sys.stdout.write("\r%d%%" % int(tantpercent))
                     sys.stdout.flush()
 
-                self.log.estat = "Finalitzat"
-                self.log.escriure_message_mongo('INFO', "S'ha acabat de "
-                                                        "processar l'arxiu.")
-                self.log.escriure_mongo()
+                # self.log.estat = "Finalitzat"
+                # self.log.escriure_message_mongo('INFO', "S'ha acabat de "
+                #                                         "processar l'arxiu.")
+                # self.log.escriure_mongo()
 
                 print "\nNumero de linies: {}".format(count)
                 return True
@@ -289,40 +290,92 @@ class FitxerSips(object):
             nom_arxiu = self.arxiu
             self.arxiu = self.rename_file('lock')
             if self.connectamongo():
-                # Import del fitxer de log
-                from configs.log_fitxers import LogFitxers
-                self.log = LogFitxers(self.mongodb, nom_arxiu, 'Start',
-                                      0, str(datetime.now()))
-                self.log.escriure_message_mongo('INFO', "------------ Starting the process ------------")
-                self.log.escriure_mongo()
+                self.guardar_log_mongo()
+
+                # self.log.escriure_message_mongo('INFO', "------------ Starting the process ------------")
+                # self.log.escriure_mongo()
 
                 self.parser_file(self.arxiu, self.directori, conf, selector)
                 self.arxiu = self.rename_file('end')
 
-            self.log.estat = "Fitxer finalitzat"
-            self.log.escriure_message_mongo('INFO', "------------ Fitxer finalitzat ------------")
-            self.log.escriure_mongo()
+            # self.log.estat = "Fitxer finalitzat"
+            # self.log.escriure_message_mongo('INFO', "------------ Fitxer finalitzat ------------")
+            # self.log.escriure_mongo()
 
             self.flog.write("Fitxer finalitzat")
 
 
         except (OSError, IOError) as e:
-            self.log.estat = 'Error'
-            self.log.escriure_message_mongo('ERROR', " Al intentar "
-                                                     "obrir el fitxer.\n "
-                                                     "{}".format(e.message))
-            self.log.escriure_mongo()
+            # self.log.estat = 'Error'
+            # self.log.escriure_message_mongo('ERROR', " Al intentar "
+            #                                          "obrir el fitxer.\n "
+            #                                          "{}".format(e.message))
+            # self.log.escriure_mongo()
 
 
             print "Error al intentar obrir el fitxer de log {}".format(
                 e.errno)
         except Exception as e:
-            self.log.estat = 'Error'
-            self.log.escriure_message_mongo('ERROR', "{}".format(e.message))
-            self.log.escriure_mongo()
+            # self.log.estat = 'Error'
+            # self.log.escriure_message_mongo('ERROR', "{}".format(e.message))
+            # self.log.escriure_mongo()
 
             self.flog.write("Hi ha hagut algun error")
             self.arxiu = self.rename_file('error')
         finally:
             shutil.rmtree(self.tmpdir)
             self.flog.close()
+
+    def guardar_log_mongo(self):
+        collection = self.mongodb.log_fitxer
+
+        # Usuari del mongodb
+        user = 'default'
+
+        # Comprovo que la colletion estigui creada, si no la creo
+        if not self.mongodb['counters'].find({"_id": "log_fitxer"}):
+            self.mongodb['counters'].save({"_id": "log_fitxer",
+                                           "counter": 1})
+        self.mongodb.eval("""db.log_fitxer.ensureIndex(
+        {"name": 1})""")
+
+        counter = self.mongodb['counters'].find_and_modify(
+            {'_id': 'log_fitxer'},
+            {'$inc': {'counter': 1}})
+
+        # Update del index
+        document = {'id': counter['counter'],
+                    'name': self.arxiu,
+                    'create_uid': user,
+                    'create_date': datetime.now()}
+        try:
+            document.update({'name': self.arxiu, 'estat': "INICI",
+                             'progres': 0.0, 't_inici': datetime.now(),
+                             't_final': None, 'message': ""})
+            res = collection.update({'name': self.arxiu}, document)
+            if res['updatedExisting'] is False:
+                collection.insert(document)
+        except pymongo.errors.OperationFailure:
+            print "ERROR a l'actualitzar el log"
+
+    def log_actualitzar(self, level, message):
+        collection = self.mongodb.log_fitxer
+        try:
+            message += '[{}] {}'.format(level, message)
+            document = ({'name': self.arxiu, 'message': message})
+            res = collection.update({'name': self.arxiu}, document)
+            if res['updatedExisting'] is False:
+                collection.insert(document)
+        except pymongo.errors.OperationFailure:
+            print "ERROR a l'actualitzar el log"
+
+    def update_progress(self, progres):
+        collection = self.mongodb.log_fitxer
+        try:
+            document = ({'name': self.arxiu, 'progres': progres})
+            res = collection.update({'name': self.arxiu}, document)
+            if res['updatedExisting'] is False:
+                collection.insert(document)
+        except pymongo.errors.OperationFailure:
+            print "ERROR a l'actualitzar el log"
+
