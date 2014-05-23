@@ -1,5 +1,7 @@
 from parser import Parser
 from datetime import datetime
+import tablib
+import copy
 
 class Iberdrola(Parser):
 
@@ -9,9 +11,13 @@ class Iberdrola(Parser):
     date_format = '%Y-%m-%d'
     descartar = ['any_sub', 'trimestre_sub']
     collection = None
+    collection_cons = None
+    data_consums = None
 
     def __init__(self, mongodb=None):
         super(Parser, self).__init__()
+        self.data_consums = tablib.Dataset()
+
         self.pkeys = ['name', ]
         self.fields_ps = [
             ('name', {'type': 'char', 'position': 0, 'magnituds': False,
@@ -41,7 +47,7 @@ class Iberdrola(Parser):
             ('provincia_titular', {'type': "char", "position": 10,
                                    'magnituds': False, 'collection': 'ps',
                                    'length': 45}),
-            ('data_alta', {'type': "datetime", "position": 11, 'magnituds': "kWh",
+            ('data_alta', {'type': "datetime", "position": 11, 'magnituds': False,
                            'collection': 'ps', 'length': 10}),
             ('tarifa', {'type': "char", "position": 12, 'magnituds': "kWh",
                         'collection': 'ps', 'length': 3}),
@@ -133,7 +139,7 @@ class Iberdrola(Parser):
                                 'magnituds': False, 'collection': 'ps',
                                 'length': 2}),
             ('any_sub', {'type': "char", "position": 43, 'magnituds': False,
-                         'collection': 'ps', 'length': 2}),
+                         'collection': 'ps', 'length': 4}),
             ('trimestre_sub', {'type': "char", "position": 44,
                                'magnituds': False, 'collection': 'ps',
                                'length': 1}), ]
@@ -192,14 +198,16 @@ class Iberdrola(Parser):
             ('potencia_6', {'type': "float", "position": 68, 'magnituds': "kWh",
                             'collection': 'consum', 'length': 11}), ]
 
-        self.fields = self.fields_ps + self.fields_consums
+        self.fields = self.fields_ps
 
-    def slices(self, *args):
+    def slices(self, line, vals):
         # La llista amb les mides dels camps entren per els args.
         position = 0
-        for length in args:
-            yield self[position:position + length]
+        lvals = []
+        for length in vals:
+            lvals.append(line[position:position + length])
             position += length
+        return lvals
 
     def load_config(self):
         for field in self.fields:
@@ -208,6 +216,22 @@ class Iberdrola(Parser):
             self.positions.append(field[1]['position'])
             self.magnitudes.append(field[1]['magnituds'])
             self.vals_long.append(field[1]['length'])
+
+        types = []
+        headers_conf = []
+        positions = []
+        magnitudes = []
+
+        for field in self.fields_consums:
+            types.append(field[1]['type'])
+            headers_conf.append(field[0])
+            positions.append(field[1]['position'])
+            magnitudes.append(field[1]['magnituds'])
+            self.vals_long.append(field[1]['length'])
+
+        self.data_consums = self.prepare_data_set(self.fields_consums, types,
+                                                  headers_conf, magnitudes)
+
 
     def validate_mongo_counters(self):
         # Comprovo que la colletion estigui creada, si no la creo
@@ -224,24 +248,26 @@ class Iberdrola(Parser):
 
     def prepare_mongo(self):
         self.collection = self.mongodb.giscedata_sips_ps
+        self.collection_cons = self.mongodb.giscedata_sips_consums
 
     def parse_line(self, line):
-        slinia = tuple(self.slices(line, *self.vals_long))
+        slinia = tuple(self.slices(line, self.vals_long))
         slinia = map(lambda s: s.strip(), slinia)
 
         # Inserto el SIPS
-        pslist = slinia[0:len(self.fieldsps)]
+        pslist = slinia[0:len(self.fields_ps)]
         name = pslist[0]
 
         # Usuari del mongodb
         user = 'default'
         try:
+            data = copy.deepcopy(self.data)
             # Llista dels valors del tros que agafem dins dels sips
-            self.data.append(pslist)
+            data.append(pslist)
             for d in self.descartar:
-                del self.data[d]
+                del data[d]
             # Creo el diccionari per fer l'insert al mongo
-            document = self.data.dict[0]
+            document = data.dict[0]
             # Id incremental
             counter = self.mongodb['counters'].find_and_modify(
                 {'_id': 'giscedata_sips_ps'},
@@ -255,27 +281,29 @@ class Iberdrola(Parser):
             # Inserto el document al mongodb
             self.insert_mongo(document, self.collection)
 
-            #Borrar els valors del tros
-            self.data.wipe()
-            #Torno a establir les headers
-            self.data.headers = self.headers_conf
+            # #Borrar els valors del tros
+            # self.data.wipe()
+            # #Torno a establir les headers
+            # self.data.headers = self.headers_conf
         except Exception as e:
-            #Faig el wipe per no extendre l'error
-            self.data.wipe()
-            self.data.headers = self.headers_conf
+            # #Faig el wipe per no extendre l'error
+            # self.data.wipe()
+            # self.data.headers = self.headers_conf
             print "Row Error"
 
-        for plinia in range(len(self.fieldsps), len(slinia),
-                            len(self.fieldsconsums)):
+        for plinia in range(len(self.fields_ps), len(slinia),
+                            len(self.fields_consums)):
             # Usuari del mongodb
             user = 'default'
             try:
+                data_consums = copy.deepcopy(self.data_consums)
+
                 # Llista dels valors del tros que agafem dins la linia
-                self.data.append(name + plinia)
-                for d in self.descartar:
-                    del self.data[d]
+                part = slinia[plinia:(len(self.fields_consums)+plinia)]
+                data_consums.append(part)
+
                 # Creo el diccionari per fer l'insert al mongo
-                document = self.data.dict[0]
+                document = data_consums.dict[0]
                 # Id incremental
                 counter = self.mongodb['counters'].find_and_modify(
                     {'_id': 'giscedata_sips_consums'},
@@ -284,17 +312,18 @@ class Iberdrola(Parser):
                 document.update(
                     {'id': counter['counter'],
                      'create_uid': user,
-                     'create_date': datetime.now()}
+                     'create_date': datetime.now(),
+                     'name': name}
                 )
                 # Inserto el document al mongodb
-                self.insert_mongo(document, self.collection)
+                self.insert_mongo(document, self.collection_cons)
 
-                #Borrar els valors del tros
-                self.data.wipe()
-                #Torno a establir les headers
-                self.data.headers = self.headers_conf
+                # #Borrar els valors del tros
+                # self.data_consums.wipe()
+                # #Torno a establir les headers
+                # self.data_consums.headers = self.headers_conf
             except Exception as e:
-                #Faig el wipe per no extendre l'error
-                self.data.wipe()
-                self.data.headers = self.headers_conf
-                print "Row Error"
+                # #Faig el wipe per no extendre l'error
+                # self.data_consums.wipe()
+                # self.data_consums.headers = self.headers_conf
+                print "Row Error consums"

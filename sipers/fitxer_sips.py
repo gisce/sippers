@@ -36,14 +36,6 @@ def parse_float(value):
         res = None
     return res
 
-def slices(s, *args):
-    # Funció per tallar un string donades les mides dels camps.
-    # La llista amb les mides dels camps entren per els args.
-    position = 0
-    for length in args:
-        yield s[position:position + length]
-        position += length
-
 """
 Variables amb els tipus de consums
 - comprovarem que sigui un dels dos valors 'x' in MAGNITUDS

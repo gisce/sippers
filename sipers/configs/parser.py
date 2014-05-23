@@ -58,7 +58,8 @@ class Parser(object):
 
     def load(self):
         self.load_config()
-        self.prepare_data_set()
+        self.data = self.prepare_data_set(self.fields, self.types,
+                              self.headers_conf, self.magnitudes)
         self.validate_mongo_counters()
         self.prepare_mongo()
 
@@ -78,37 +79,38 @@ class Parser(object):
             self.flog.write("Error: A l'insert del mongodb")
         return True
 
-    def prepare_data_set(self):
-        self.data = tablib.Dataset()
-        self.data.headers = self.headers_conf
+    def prepare_data_set(self, fields, types, headers_conf, magnitudes):
+        data = tablib.Dataset()
+        data.headers = headers_conf
 
-        for field, v in zip(self.fields, self.types):
+        for field, v in zip(fields, types):
             if v == 'float':
-                self.data.add_formatter(field[0],
+                data.add_formatter(field[0],
                                         lambda a: a and parse_float(a) or 0)
             if v == 'integer':
-                self.data.add_formatter(field[0],
+                data.add_formatter(field[0],
                                         lambda a:
                                         a and int(parse_float(a)) or 0)
             if v == 'datetime':
-                self.data.add_formatter(field[0],
+                data.add_formatter(field[0],
                                         lambda a:
                                         a and parse_datetime(a,
                                                              self.date_format))
             if v == 'long':
-                self.data.add_formatter(field[0],
+                data.add_formatter(field[0],
                                         lambda a: a and long(a) or 0)
 
         # Passar a kW les potencies que estan en W
-        for field, v in zip(self.fields, self.magnitudes):
+        for field, v in zip(fields, magnitudes):
             if v == 'Wh':
-                self.data.add_formatter(field[0],
+                data.add_formatter(field[0],
                                         lambda a:
                                         a and float(a)/MAGNITUDS['Wh'] or 0)
             elif v == 'kWh':
-                self.data.add_formatter(field[0],
+                data.add_formatter(field[0],
                                         lambda a:
                                         a and float(a)/MAGNITUDS['kWh'] or 0)
+        return data
 
     def validate_mongo_counters(self):
         raise NotImplementedError( "Should have implemented this")
