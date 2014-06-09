@@ -369,13 +369,10 @@ class FitxerSips(object):
         except pymongo.errors.OperationFailure:
             print "ERROR a l'actualitzar el log"
 
-    def update_progress(self, progres):
+    def update_progress(self, progress):
         collection = self.mongodb.log_fitxer
         try:
-            document = ({'name': self.arxiu, 'progres': progres})
-            res = collection.update({'name': self.arxiu}, document)
-            if res['updatedExisting'] is False:
-                collection.insert(document)
+            collection.update({'name': self.arxiu},
+                              {'$set': {'progres': progress}})
         except pymongo.errors.OperationFailure:
             print "ERROR a l'actualitzar el log"
-
