@@ -88,6 +88,9 @@ class FitxerSips(object):
                       self.arxiu):
             from configs.endesacons import EndesaCons
             self.parser = EndesaCons()
+        elif re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF[34].SEG0[1-5].(zip|ZIP)',
+                      self.arxiu):
+            pass
         elif re.match('HGSBKA_E0021_TXT.\.(zip|ZIP)',
                       self.arxiu):
             from configs.iberdrola import Iberdrola
@@ -215,6 +218,10 @@ class FitxerSips(object):
             # Base de dades
             self.mongodb = client[self.dbname]
             self.parser.mongodb = self.mongodb
+            # Comprovo que la collecció counters estigui creada, si no la creo
+            if not self.mongodb['counters'].count():
+                self.mongodb['counters'].save({"_id": self.parser.classe,
+                                               "counter": 1})
         except Exception as e:
             self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
                             "info: {}".format(e.message))
@@ -262,8 +269,8 @@ class FitxerSips(object):
         try:
             self.flog = open(self.arxiu + ".txt", "w")
             nom_arxiu = self.arxiu
-            self.arxiu = self.rename_file('lock')
             if self.connectamongo():
+                self.arxiu = self.rename_file('lock')
                 self.guardar_log_mongo()
                 self.parser_file(self.arxiu, self.directori, conf, selector)
                 self.arxiu = self.rename_file('end')
@@ -273,11 +280,13 @@ class FitxerSips(object):
             print "Error al intentar obrir el fitxer de log {}".format(
                 e.errno)
         except Exception as e:
-            self.flog.write("Hi ha hagut algun error")
+            self.flog.write("Hi ha hagut algun error: %s" % str(e))
             self.arxiu = self.rename_file('error')
         finally:
-            shutil.rmtree(self.tmpdir)
-            self.flog.close()
+            if self.tmpdir:
+                shutil.rmtree(self.tmpdir)
+            if self.flog:
+                self.flog.close()
 
     def guardar_log_mongo(self):
         collection = self.mongodb.log_fitxer
@@ -286,7 +295,7 @@ class FitxerSips(object):
         user = 'default'
 
         # Comprovo que la colletion estigui creada, si no la creo
-        if not self.mongodb['counters'].find({"_id": "log_fitxer"}):
+        if not self.mongodb['counters'].find({"_id": "log_fitxer"}).count():
             self.mongodb['counters'].save({"_id": "log_fitxer",
                                            "counter": 1})
         self.mongodb.eval("""db.log_fitxer.ensureIndex(

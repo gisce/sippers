@@ -35,8 +35,10 @@ def run(directori, dbname):
     for arxiu in llista_arxius:
         # Log per els errors de lectura
         print "Arxiu:{}".format(arxiu)
-        fitxer_sips = FitxerSips(arxiu=arxiu, directori=directori, dbname=dbname)
-        fitxer_sips.start()
+        fitxer_sips = FitxerSips(arxiu=arxiu, directori=directori,
+                                 dbname=dbname)
+        if fitxer_sips.parser:
+            fitxer_sips.start()
 
 def main():
     import optparse
