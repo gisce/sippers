@@ -3,6 +3,7 @@ from datetime import datetime
 import tablib
 import copy
 
+
 class Iberdrola(Parser):
 
     delimiter = 'ampfix'
@@ -47,8 +48,9 @@ class Iberdrola(Parser):
             ('provincia_titular', {'type': "char", "position": 10,
                                    'magnituds': False, 'collection': 'ps',
                                    'length': 45}),
-            ('data_alta', {'type': "datetime", "position": 11, 'magnituds': False,
-                           'collection': 'ps', 'length': 10}),
+            ('data_alta', {'type': "datetime", "position": 11,
+                           'magnituds': False, 'collection': 'ps',
+                           'length': 10}),
             ('tarifa', {'type': "char", "position": 12, 'magnituds': "kWh",
                         'collection': 'ps', 'length': 3}),
             ('tensio', {'type': "interger", "position": 13, 'magnituds': False,

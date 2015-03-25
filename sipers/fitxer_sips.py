@@ -14,6 +14,7 @@ import tempfile
 import pymongo
 import copy
 
+
 def parse_datetime(value, dataformat):
     # Funcio per l'add_formatter converteixi de string a datetime
     try:
@@ -21,6 +22,7 @@ def parse_datetime(value, dataformat):
     except:
         res = None
     return res
+
 
 def parse_float(value):
     # Funcio per l'add_formatter converteixi valors en coma a float amb punt
@@ -35,6 +37,7 @@ def parse_float(value):
     except:
         res = None
     return res
+
 
 """
 Variables amb els tipus de consums
@@ -76,22 +79,26 @@ class FitxerSips(object):
     parser = None
     files = []
 
-    def __init__(self, arxiu, directori=None, dbname=None):
+    def __init__(self, arxiu, directori=None, dbname=None, dburi=None):
         # Parser del fitxer de SIPS
         #Afagar els arxius de un directori
         self.directori = directori
         self.dbname = dbname
+        self.dburi = dburi
         self.arxiu = arxiu
-        if re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
-                    self.arxiu):
+        if re.match(
+                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
+                self.arxiu):
             from configs.endesa import Endesa
             self.parser = Endesa()
-        elif re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)',
-                      self.arxiu):
+        elif re.match(
+                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)',
+                self.arxiu):
             from configs.endesacons import EndesaCons
             self.parser = EndesaCons()
-        elif re.match('(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF[34].SEG0[1-5].(zip|ZIP)',
-                      self.arxiu):
+        elif re.match(
+                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF[34].SEG0[1-5].(zip|ZIP)',
+                self.arxiu):
             pass
         elif re.match('HGSBKA_E0021_TXT.\.(zip|ZIP)',
                       self.arxiu):
@@ -119,7 +126,6 @@ class FitxerSips(object):
             if fparts[-1].upper() == 'ZIP':
                 llista_arxius.append(fitxer)
         return llista_arxius
-
 
     def get_available_conf(self):
         """Aquest mètode retorna una llista amb tots els tipus de fitxers que
@@ -191,7 +197,6 @@ class FitxerSips(object):
         else:
             return True
 
-
     def load_conf(self, arxiu, directori, dirtmp=None):
         """Mètode per agafar valors de la configuració, crear un directori
         temporal """
@@ -250,7 +255,8 @@ class FitxerSips(object):
             with codecs.open(arxiu, "r", "iso-8859-15") as f:
                 for linia in f:
                     self.parser.parse_line(linia)
-                    # Actualitzo contador de linies, sumatori i tantpercert completat
+                    # Actualitzo contador de linies, sumatori i
+                    # tantpercent completat
                     count += 1
                     sumatori += len(linia)
                     tantpercent = float(sumatori) / self.midafitxer * 100.0

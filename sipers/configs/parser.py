@@ -3,6 +3,7 @@ from datetime import datetime
 import tablib
 import pymongo
 
+
 def parse_datetime(value, dataformat):
     # Funcio per l'add_formatter converteixi de string a datetime
     try:
@@ -10,6 +11,7 @@ def parse_datetime(value, dataformat):
     except:
         res = None
     return res
+
 
 def parse_float(value):
     # Funcio per l'add_formatter converteixi valors en coma a float amb punt
@@ -25,6 +27,7 @@ def parse_float(value):
         res = None
     return res
 
+
 def slices(s, *args):
     # Funció per tallar un string donades les mides dels camps.
     # La llista amb les mides dels camps entren per els args.
@@ -37,6 +40,7 @@ MAGNITUDS = {
     'Wh': 1000,
     'kWh': 1
 }
+
 
 class Parser(object):
     types = []
@@ -55,16 +59,15 @@ class Parser(object):
         self.data = tablib.Dataset()
         self.mongodb = mongodb
 
-
     def load(self):
         self.load_config()
         self.data = self.prepare_data_set(self.fields, self.types,
-                              self.headers_conf, self.magnitudes)
+                                          self.headers_conf, self.magnitudes)
         self.validate_mongo_counters()
         self.prepare_mongo()
 
     def load_config(self):
-        raise NotImplementedError( "Should have implemented this")
+        raise NotImplementedError("Should have implemented this")
 
     def insert_mongo(self, document, collection):
         # Afegeixo les entrades
@@ -86,40 +89,35 @@ class Parser(object):
         for field, v in zip(fields, types):
             if v == 'float':
                 data.add_formatter(field[0],
-                                        lambda a: a and parse_float(a) or 0)
+                                   lambda a: a and parse_float(a) or 0)
             if v == 'integer':
                 data.add_formatter(field[0],
-                                        lambda a:
-                                        a and int(parse_float(a)) or 0)
+                                   lambda a: a and int(parse_float(a)) or 0)
             if v == 'datetime':
-                data.add_formatter(field[0],
-                                        lambda a:
-                                        a and parse_datetime(a,
+                data.add_formatter(
+                    field[0], lambda a: a and parse_datetime(a,
                                                              self.date_format))
             if v == 'long':
-                data.add_formatter(field[0],
-                                        lambda a: a and long(a) or 0)
+                data.add_formatter(field[0], lambda a: a and long(a) or 0)
 
         # Passar a kW les potencies que estan en W
         for field, v in zip(fields, magnitudes):
             if v == 'Wh':
-                data.add_formatter(field[0],
-                                        lambda a:
-                                        a and float(a)/MAGNITUDS['Wh'] or 0)
+                data.add_formatter(
+                    field[0], lambda a: a and float(a)/MAGNITUDS['Wh'] or 0)
             elif v == 'kWh':
-                data.add_formatter(field[0],
-                                        lambda a:
-                                        a and float(a)/MAGNITUDS['kWh'] or 0)
+                data.add_formatter(
+                    field[0], lambda a: a and float(a)/MAGNITUDS['kWh'] or 0)
         return data
 
     def validate_mongo_counters(self):
-        raise NotImplementedError( "Should have implemented this")
+        raise NotImplementedError("Should have implemented this")
 
     def prepare_mongo(self):
-        raise NotImplementedError( "Should have implemented this")
+        raise NotImplementedError("Should have implemented this")
 
     def parse_line(self, line):
-        raise NotImplementedError( "Should have implemented this")
+        raise NotImplementedError("Should have implemented this")
 
 
 

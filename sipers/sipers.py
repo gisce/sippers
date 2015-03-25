@@ -6,7 +6,6 @@ from fitxer_sips import FitxerSips
 from datetime import datetime
 
 
-
 DEFAULT_DIRECTORI = '/tmp'
 DEFAULT_DBNAME = 'sips'
 
