@@ -47,11 +47,13 @@ MAGNITUDS = {
     'kWh': 1
 }
 
+
 class FitxerSips(object):
     # Variables estatiques
     arxiu = None
     directori = None
     dbname = None
+    uri = None
     mongodb = None
     fitxer_conf = None
     filecodificat = None
@@ -214,13 +216,19 @@ class FitxerSips(object):
     def connectamongo(self):
         try:
             # Connectar i escollir la bbdd
-            client = MongoClient()
-            # Base de dades
-            self.mongodb = client[self.dbname]
+            if self.dburi:
+                # Permet usr/pwd
+                client = MongoClient(self.dburi)
+                if self.dbname:
+                    self.mongodb = client[self.dbname]
+            else:
+                client = MongoClient()
+                # Base de dades
+                self.mongodb = client[self.dbname]
             self.parser.mongodb = self.mongodb
             # Comprovo que la collecció counters estigui creada, si no la creo
             if not self.mongodb['counters'].count():
-                self.mongodb['counters'].save({"_id": self.parser.classe,
+                self.mongodb['counters'].save({"_id": "log_fitxer",
                                                "counter": 1})
         except Exception as e:
             self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
@@ -298,8 +306,8 @@ class FitxerSips(object):
         if not self.mongodb['counters'].find({"_id": "log_fitxer"}).count():
             self.mongodb['counters'].save({"_id": "log_fitxer",
                                            "counter": 1})
-        self.mongodb.eval("""db.log_fitxer.ensureIndex(
-        {"name": 1})""")
+            self.mongodb.eval("""db.log_fitxer.createIndex(
+                                 {"name": 1})""")
 
         counter = self.mongodb['counters'].find_and_modify(
             {'_id': 'log_fitxer'},
@@ -315,7 +323,7 @@ class FitxerSips(object):
                              'progres': 0.0, 't_inici': datetime.now(),
                              't_final': None, 'message': ""})
             res = collection.update({'name': self.arxiu}, document)
-            if res['updatedExisting'] is False:
+            if res and res['updatedExisting'] is False:
                 collection.insert(document)
         except pymongo.errors.OperationFailure:
             print "ERROR a l'actualitzar el log"
@@ -326,7 +334,7 @@ class FitxerSips(object):
             message += '[{}] {}'.format(level, message)
             document = ({'name': self.arxiu, 'message': message})
             res = collection.update({'name': self.arxiu}, document)
-            if res['updatedExisting'] is False:
+            if res and res['updatedExisting'] is False:
                 collection.insert(document)
         except pymongo.errors.OperationFailure:
             print "ERROR a l'actualitzar el log"

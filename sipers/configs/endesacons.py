@@ -70,10 +70,12 @@ class EndesaCons(Parser):
 
     def validate_mongo_counters(self):
         # Comprovo que la colletion estigui creada, si no la creo
-        if not self.mongodb['counters'].find({"_id": "giscedata_sips_consums"}).count():
-            self.mongodb['counters'].save({"_id": "giscedata_sips_consums",
-                                           "counter": 1})
-        self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex({"name": 1})""")
+        if not self.mongodb['counters'].find(
+                {"_id": "giscedata_sips_consums"}).count():
+            self.mongodb['counters'].save(
+                {"_id": "giscedata_sips_consums", "counter": 1})
+            self.mongodb.eval(
+                'db.giscedata_sips_consums.createIndex({"name": 1})')
 
     def prepare_mongo(self):
         self.collection = self.mongodb.giscedata_sips_consums

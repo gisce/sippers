@@ -26,9 +26,11 @@ def agafarxius(path):
                 llista_arxius.append(fitxer)
     return llista_arxius
 
-def run(directori, dbname):
+
+def run(directori, dbname, dburi):
     print directori
     print dbname
+    print dburi
 
     llista_arxius = agafarxius(directori)
     # Processar per cada un dels arxius zip
@@ -36,9 +38,10 @@ def run(directori, dbname):
         # Log per els errors de lectura
         print "Arxiu:{}".format(arxiu)
         fitxer_sips = FitxerSips(arxiu=arxiu, directori=directori,
-                                 dbname=dbname)
+                                 dbname=dbname, dburi=dburi)
         if fitxer_sips.parser:
             fitxer_sips.start()
+
 
 def main():
     import optparse
@@ -46,9 +49,11 @@ def main():
     parser = optparse.OptionParser()
     parser.add_option("--directori", dest="directori")
     parser.add_option("--dbname", dest="dbname")
+    parser.add_option("--dburi", dest="dburi")
+
     (options, args) = parser.parse_args()
     if not options.directori and not options.dbname:
-        print 'Usage: sipers --directori=PATH --dbname=DBNAME'
+        print 'Usage: sipers --directori=PATH [--dbname=DBNAME | --dburi=URI]'
         sys.exit(1)
     sys.exit(run(**options.__dict__))
 

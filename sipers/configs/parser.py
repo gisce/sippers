@@ -73,7 +73,7 @@ class Parser(object):
             query = dict(zip(self.pkeys, pvalues))
 
             res = collection.update(query, document)
-            if res['updatedExisting'] is False:
+            if res and res['updatedExisting'] is False:
                 collection.insert(document)
         except pymongo.errors.OpertionFailure:
             self.flog.write("Error: A l'insert del mongodb")

@@ -232,19 +232,20 @@ class Iberdrola(Parser):
         self.data_consums = self.prepare_data_set(self.fields_consums, types,
                                                   headers_conf, magnitudes)
 
-
     def validate_mongo_counters(self):
         # Comprovo que la colletion estigui creada, si no la creo
-        if not self.mongodb['counters'].find({"_id": "giscedata_sips_ps"}).count():
-            self.mongodb['counters'].save({"_id": "giscedata_sips_ps",
-                                           "counter": 1})
-        if not self.mongodb['counters'].find({"_id": "giscedata_sips_consums"}).count():
+        if not self.mongodb['counters'].find(
+                {"_id": "giscedata_sips_ps"}).count():
+            self.mongodb['counters'].save(
+                {"_id": "giscedata_sips_ps", "counter": 1})
+        if not self.mongodb['counters'].find(
+                {"_id": "giscedata_sips_consums"}).count():
             self.mongodb['counters'].save({"_id": "giscedata_sips_consum",
                                            "counter": 1})
-        self.mongodb.eval("""db.giscedata_sips_ps.ensureIndex(
-            {"name": 1})""")
-        self.mongodb.eval("""db.giscedata_sips_consums.ensureIndex(
-            {"name": 1})""")
+        self.mongodb.eval(
+            'db.giscedata_sips_ps.createIndex({"name": 1})')
+        self.mongodb.eval(
+            'db.giscedata_sips_consums.createIndex({"name": 1})')
 
     def prepare_mongo(self):
         self.collection = self.mongodb.giscedata_sips_ps
