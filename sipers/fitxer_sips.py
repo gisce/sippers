@@ -291,8 +291,8 @@ class FitxerSips(object):
 
             self.flog.write("Fitxer finalitzat")
         except (OSError, IOError) as e:
-            print "Error al intentar obrir el fitxer de log {}".format(
-                e.errno)
+            print "Error al intentar obrir el fitxer de log {} ({}:{})".format(
+                self.flog, e.errno, str(e))
         except Exception as e:
             self.flog.write("Hi ha hagut algun error: %s" % str(e))
             self.arxiu = self.rename_file('error')
