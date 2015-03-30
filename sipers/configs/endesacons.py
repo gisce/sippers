@@ -137,4 +137,4 @@ class EndesaCons(Parser):
                 # #Faig el wipe per no extendre l'error
                 # self.data.wipe()
                 # self.data.headers = self.headers_conf
-                print "Row Error"
+                print "Row Error: %s: %s" % (str(e), line)

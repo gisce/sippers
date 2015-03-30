@@ -329,4 +329,4 @@ class Iberdrola(Parser):
                 # #Faig el wipe per no extendre l'error
                 # self.data_consums.wipe()
                 # self.data_consums.headers = self.headers_conf
-                print "Row Error consums"
+                print "Row Error consums: %s: %s" % (str(e), line)
