@@ -1,8 +1,6 @@
-from fitxer_sips import FitxerSips
+from sipers import run
 
-parser = FitxerSips(
-    directori="/home/pau/Documents/sips/IBERDROLA 20140127/Iberdrola/prova",
-    dbname="somenergia")
-print "parser:{}".format(parser)
-parser.run()
 
+run('/home/erp/sync/sips',
+    'mongo_database',
+    'mongodb://erp@localhost/mongo_database')
