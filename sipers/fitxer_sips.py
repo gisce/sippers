@@ -87,6 +87,7 @@ class FitxerSips(object):
         self.dburi = dburi
         self.arxiu = arxiu
         self.files = []
+        self.tmpdir = None
         if re.match(
                 '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
                 self.arxiu):
