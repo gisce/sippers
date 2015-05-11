@@ -268,7 +268,7 @@ class FitxerSips(object):
                     sys.stdout.flush()
 
                 print "\nNumero de linies: {}".format(count)
-                return True
+        return True
 
     def parser_file(self, arxiu, directori, conf=False, selector=None):
         self.load_conf(arxiu, directori)
