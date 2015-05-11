@@ -282,7 +282,7 @@ class FitxerSips(object):
 
     def start(self, conf=False, selector=None):
         try:
-            self.flog = open(self.arxiu + ".txt", "w")
+            self.flog = open(self.directori+'/'+self.arxiu + ".log", "w")
             nom_arxiu = self.arxiu
             if self.connectamongo():
                 self.arxiu = self.rename_file('lock')
