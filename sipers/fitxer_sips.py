@@ -86,6 +86,8 @@ class FitxerSips(object):
         self.dbname = dbname
         self.dburi = dburi
         self.arxiu = arxiu
+        self.files = []
+        self.tmpdir = None
         if re.match(
                 '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
                 self.arxiu):
@@ -267,7 +269,7 @@ class FitxerSips(object):
                     sys.stdout.flush()
 
                 print "\nNumero de linies: {}".format(count)
-                return True
+        return True
 
     def parser_file(self, arxiu, directori, conf=False, selector=None):
         self.load_conf(arxiu, directori)
@@ -281,7 +283,7 @@ class FitxerSips(object):
 
     def start(self, conf=False, selector=None):
         try:
-            self.flog = open(self.arxiu + ".txt", "w")
+            self.flog = open(self.directori+'/'+self.arxiu + ".log", "w")
             nom_arxiu = self.arxiu
             if self.connectamongo():
                 self.arxiu = self.rename_file('lock')
