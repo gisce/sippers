@@ -14,5 +14,9 @@ setup(
         [console_scripts]
         sippers=sippers.sippers:main
     """,
+    install_requires=[
+        "pymongo<3.0",
+        "tablib"
+    ],
     test_suite='tests',
 )
