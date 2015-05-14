@@ -1,2 +1,2 @@
 tablib
-pymongo
+pymongo<3.0

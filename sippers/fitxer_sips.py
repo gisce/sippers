@@ -3,40 +3,14 @@
 import os
 import sys
 import zipfile
-import tablib
 import codecs
 from pymongo import MongoClient
 import ConfigParser
 import re
-from datetime import datetime, date
+from datetime import datetime
 import shutil
 import tempfile
 import pymongo
-import copy
-
-
-def parse_datetime(value, dataformat):
-    # Funcio per l'add_formatter converteixi de string a datetime
-    try:
-        res = datetime.strptime(value, dataformat)
-    except:
-        res = None
-    return res
-
-
-def parse_float(value):
-    # Funcio per l'add_formatter converteixi valors en coma a float amb punt
-    try:
-        punts = value.replace(',', '.')
-        deci = punts.split('.')[-1]
-        nume = punts.split('.')[:-1]
-        if nume:
-            res = float('{}.{}'.format(''.join(nume), deci))
-        else:
-            res = value
-    except:
-        res = None
-    return res
 
 
 """
@@ -44,11 +18,6 @@ Variables amb els tipus de consums
 - comprovarem que sigui un dels dos valors 'x' in MAGNITUDS
 - Sempre dividirem pel valor de la unitat consum/MAGNITUDS['x']
 """
-
-MAGNITUDS = {
-    'Wh': 1000,
-    'kWh': 1
-}
 
 
 class FitxerSips(object):
