@@ -17,3 +17,15 @@ class TestSipsDetection(SipsTestCaseBase):
                 COMPANY_PARSERS[dso],
                 path
             )
+
+    def test_assign_parser(self):
+        from sippers.fitxer_sips import FitxerSips
+        for dso in self.SIPS_DATA:
+            sips_file = self.SIPS_DATA[dso]['file']
+            sips = FitxerSips(sips_file)
+            parser = sips.parser.__class__
+            path = '.'.join([parser.__module__, parser.__name__])
+            self.assertEquals(
+                COMPANY_PARSERS[dso],
+                path
+            )

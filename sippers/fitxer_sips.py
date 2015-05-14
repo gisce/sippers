@@ -4,13 +4,15 @@ import os
 import sys
 import zipfile
 import codecs
-from pymongo import MongoClient
 import ConfigParser
 import re
 from datetime import datetime
 import shutil
 import tempfile
+
+from pymongo import MongoClient
 import pymongo
+from .configs.parser import get_parser
 
 
 """
@@ -57,24 +59,9 @@ class FitxerSips(object):
         self.arxiu = arxiu
         self.files = []
         self.tmpdir = None
-        if re.match(
-                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
-                self.arxiu):
-            from configs.endesa import Endesa
-            self.parser = Endesa()
-        elif re.match(
-                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)',
-                self.arxiu):
-            from configs.endesacons import EndesaCons
-            self.parser = EndesaCons()
-        elif re.match(
-                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF[34].SEG0[1-5].(zip|ZIP)',
-                self.arxiu):
-            pass
-        elif re.match('HGSBKA_E0021_TXT.\.(zip|ZIP)',
-                      self.arxiu):
-            from configs.iberdrola import Iberdrola
-            self.parser = Iberdrola()
+        self.parser = get_parser(self.arxiu)
+        if self.parser:
+            self.parser = self.parser()
         else:
             raise SystemError
 
