@@ -2,7 +2,7 @@
 
 import os
 import time
-from fitxer_sips import FitxerSips
+from sippers.fitxer_sips import FitxerSips
 from datetime import datetime
 
 

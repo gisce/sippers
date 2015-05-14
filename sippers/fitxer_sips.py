@@ -3,40 +3,16 @@
 import os
 import sys
 import zipfile
-import tablib
 import codecs
-from pymongo import MongoClient
 import ConfigParser
 import re
-from datetime import datetime, date
+from datetime import datetime
 import shutil
 import tempfile
+
+from pymongo import MongoClient
 import pymongo
-import copy
-
-
-def parse_datetime(value, dataformat):
-    # Funcio per l'add_formatter converteixi de string a datetime
-    try:
-        res = datetime.strptime(value, dataformat)
-    except:
-        res = None
-    return res
-
-
-def parse_float(value):
-    # Funcio per l'add_formatter converteixi valors en coma a float amb punt
-    try:
-        punts = value.replace(',', '.')
-        deci = punts.split('.')[-1]
-        nume = punts.split('.')[:-1]
-        if nume:
-            res = float('{}.{}'.format(''.join(nume), deci))
-        else:
-            res = value
-    except:
-        res = None
-    return res
+from .configs.parser import get_parser
 
 
 """
@@ -44,11 +20,6 @@ Variables amb els tipus de consums
 - comprovarem que sigui un dels dos valors 'x' in MAGNITUDS
 - Sempre dividirem pel valor de la unitat consum/MAGNITUDS['x']
 """
-
-MAGNITUDS = {
-    'Wh': 1000,
-    'kWh': 1
-}
 
 
 class FitxerSips(object):
@@ -88,24 +59,9 @@ class FitxerSips(object):
         self.arxiu = arxiu
         self.files = []
         self.tmpdir = None
-        if re.match(
-                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)',
-                self.arxiu):
-            from configs.endesa import Endesa
-            self.parser = Endesa()
-        elif re.match(
-                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)',
-                self.arxiu):
-            from configs.endesacons import EndesaCons
-            self.parser = EndesaCons()
-        elif re.match(
-                '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF[34].SEG0[1-5].(zip|ZIP)',
-                self.arxiu):
-            pass
-        elif re.match('HGSBKA_E0021_TXT.\.(zip|ZIP)',
-                      self.arxiu):
-            from configs.iberdrola import Iberdrola
-            self.parser = Iberdrola()
+        self.parser = get_parser(self.arxiu)
+        if self.parser:
+            self.parser = self.parser()
         else:
             raise SystemError
 

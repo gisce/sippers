@@ -1,4 +1,4 @@
-from parser import Parser
+from parser import Parser, register
 from datetime import datetime
 import tablib
 import copy
@@ -7,7 +7,7 @@ import copy
 class Iberdrola(Parser):
 
     delimiter = 'ampfix'
-    pattern = 'HGSBKA_E0021_TXT.\.(zip|ZIP)'
+    pattern = 'HGSBKA_(E0021_TXT[A-Z0-9]+\.(zip|ZIP)|TXT[A-Z0-9]+\.TXT)'
     num_fields = 00
     date_format = '%Y-%m-%d'
     descartar = ['any_sub', 'trimestre_sub']
@@ -330,3 +330,6 @@ class Iberdrola(Parser):
                 # self.data_consums.wipe()
                 # self.data_consums.headers = self.headers_conf
                 print "Row Error consums: %s: %s" % (str(e), line)
+
+
+register(Iberdrola)
