@@ -7,7 +7,7 @@ import copy
 class Iberdrola(Parser):
 
     delimiter = 'ampfix'
-    pattern = 'HGSBKA_(E0021_TXT.\.(zip|ZIP)|TXT2.TXT)'
+    pattern = 'HGSBKA_(E0021_TXT[A-Z0-9]+\.(zip|ZIP)|TXT[A-Z0-9]+\.TXT)'
     num_fields = 00
     date_format = '%Y-%m-%d'
     descartar = ['any_sub', 'trimestre_sub']
