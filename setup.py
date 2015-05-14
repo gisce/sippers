@@ -14,4 +14,5 @@ setup(
         [console_scripts]
         sippers=sippers.sippers:main
     """,
+    test_suite='tests',
 )
