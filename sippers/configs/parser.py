@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+import os
+import re
 import tablib
 import pymongo
 
@@ -42,6 +44,28 @@ MAGNITUDS = {
 }
 
 
+_PARSERS = {
+
+}
+
+
+def register(cls):
+    """Register a parser
+
+    :type cls: Parser class
+    """
+    module = cls.__module__
+    path = '.'.join([module, cls.__name__])
+    _PARSERS[path] = cls
+
+
+def get_parser(sips_file):
+    for path, cls in _PARSERS.items():
+        if cls.detect(sips_file):
+            return cls
+    return None
+
+
 class Parser(object):
     types = []
     headers_conf = []
@@ -53,6 +77,13 @@ class Parser(object):
     fields = None
     pkeys = None
     date_format = None
+    pattern = None
+
+    @classmethod
+    def detect(cls, sips_file):
+        if cls.pattern:
+            return re.match(cls.pattern, os.path.basename(sips_file))
+        return False
 
     def __init__(self, mongodb=None):
         #Creo el dataset buit
