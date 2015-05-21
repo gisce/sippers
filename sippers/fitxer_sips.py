@@ -43,7 +43,6 @@ class FitxerSips(object):
     descartar = None
     primary_keys = None
     midafitxer = None
-    flog = None
     log = None
     pkeys = None
     tmpdir = None
@@ -170,8 +169,9 @@ class FitxerSips(object):
                     self.files.append(path+'/'+files[0])
                     self.midafitxer = os.stat(path+'/'+files[0]).st_size
         except Exception as e:
-            self.flog.write("Error: a la extració del zip, info: {}"
-                            .format(e.message))
+            logger.error("Error: a la extració del zip, info: {}".format(
+                e.message)
+            )
             # Borrar el directori temporal
             shutil.rmtree(self.tmpdir)
             raise SystemExit
@@ -195,8 +195,8 @@ class FitxerSips(object):
                 self.mongodb['counters'].save({"_id": "log_fitxer",
                                                "counter": 1})
         except Exception as e:
-            self.flog.write("Error: No s'ha pogut connectar a la base de dades,"
-                            "info: {}".format(e.message))
+            logger.error("Error: No s'ha pogut connectar a la base de dades,"
+                         "info: {}".format(e.message))
             raise SystemExit
         return self.mongodb
 
@@ -240,28 +240,20 @@ class FitxerSips(object):
 
     def start(self, conf=False, selector=None):
         try:
-            self.flog = open(self.directori+'/'+self.arxiu + ".log", "w")
-            nom_arxiu = self.arxiu
+            logger.info('Starting file: %s', self.arxiu)
             if self.connectamongo():
                 self.arxiu = self.rename_file('lock')
                 self.guardar_log_mongo()
                 self.parser_file(self.arxiu, self.directori, conf, selector)
                 self.arxiu = self.rename_file('end')
 
-            self.flog.write("Fitxer finalitzat")
-        except (OSError, IOError) as e:
-            logger.error(
-                "Error al intentar obrir el fitxer de log {} ({}:{})".format(
-                    self.flog, e.errno, str(e))
-            )
+            logger.info("Ended file: %s", self.arxiu)
         except Exception as e:
-            self.flog.write("Hi ha hagut algun error: %s" % str(e))
+            logger.error("Hi ha hagut algun error: %s" % str(e))
             self.arxiu = self.rename_file('error')
         finally:
             if self.tmpdir:
                 shutil.rmtree(self.tmpdir)
-            if self.flog:
-                self.flog.close()
 
     def guardar_log_mongo(self):
         collection = self.mongodb.log_fitxer

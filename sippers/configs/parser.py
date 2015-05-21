@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from datetime import datetime
 import os
 import re
 import tablib
 import pymongo
+
+from sippers import logger
 
 
 def parse_datetime(value, dataformat):
@@ -110,7 +113,7 @@ class Parser(object):
             if res and res['updatedExisting'] is False:
                 collection.insert(document)
         except pymongo.errors.OpertionFailure:
-            self.flog.write("Error: A l'insert del mongodb")
+            logger.error("Error: A l'insert del mongodb")
         return True
 
     def prepare_data_set(self, fields, types, headers_conf, magnitudes):
