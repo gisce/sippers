@@ -17,7 +17,8 @@ setup(
     install_requires=[
         "raven",
         "pymongo<3.0",
-        "tablib"
+        "tablib",
+        "osconf"
     ],
     test_suite='tests',
 )
