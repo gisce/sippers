@@ -1,7 +1,10 @@
-from parser import Parser, register
+from __future__ import absolute_import
 from datetime import datetime
 import tablib
 import copy
+
+from sippers import logger
+from sippers.configs.parser import Parser, register
 
 
 class Iberdrola(Parser):
@@ -292,7 +295,7 @@ class Iberdrola(Parser):
             # #Faig el wipe per no extendre l'error
             # self.data.wipe()
             # self.data.headers = self.headers_conf
-            print "Row Error"
+            logger.error("Row Error")
 
         for plinia in range(len(self.fields_ps), len(slinia),
                             len(self.fields_consums)):
@@ -329,7 +332,7 @@ class Iberdrola(Parser):
                 # #Faig el wipe per no extendre l'error
                 # self.data_consums.wipe()
                 # self.data_consums.headers = self.headers_conf
-                print "Row Error consums: %s: %s" % (str(e), line)
+                logger.error("Row Error consums: %s: %s" % (str(e), line))
 
 
 register(Iberdrola)

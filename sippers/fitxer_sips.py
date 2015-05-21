@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import absolute_import
 import os
 import sys
 import zipfile
@@ -12,7 +12,8 @@ import tempfile
 
 from pymongo import MongoClient
 import pymongo
-from .configs.parser import get_parser
+from sippers import logger
+from sippers.configs.parser import get_parser
 
 
 """
@@ -80,7 +81,7 @@ class FitxerSips(object):
         llista_arxius = []
         for fitxer in os.listdir(path):
             fparts = fitxer.split(".")
-            print "fparts {}".format(fparts)
+            logger.debug("fparts {}".format(fparts))
             if fparts[-1].upper() == 'ZIP':
                 llista_arxius.append(fitxer)
         return llista_arxius
@@ -106,8 +107,8 @@ class FitxerSips(object):
                 self.dbname = conf.get('global', 'dbname')
                 self.tmpdir = conf.get('global', 'tmp_dir')
             else:
-                print "Error, no s'ha trobat cap coincidencia en les confs" \
-                      "dels servidors"
+                logger.error("Error, no s'ha trobat cap coincidencia en les"
+                             "confs dels servidors")
                 return False
 
         return True
@@ -224,7 +225,7 @@ class FitxerSips(object):
                     sys.stdout.write("\r%d%%" % int(tantpercent))
                     sys.stdout.flush()
 
-                print "\nNumero de linies: {}".format(count)
+                logger.info("Número de linies: {}".format(count))
         return True
 
     def parser_file(self, arxiu, directori, conf=False, selector=None):
@@ -249,8 +250,10 @@ class FitxerSips(object):
 
             self.flog.write("Fitxer finalitzat")
         except (OSError, IOError) as e:
-            print "Error al intentar obrir el fitxer de log {} ({}:{})".format(
-                self.flog, e.errno, str(e))
+            logger.error(
+                "Error al intentar obrir el fitxer de log {} ({}:{})".format(
+                    self.flog, e.errno, str(e))
+            )
         except Exception as e:
             self.flog.write("Hi ha hagut algun error: %s" % str(e))
             self.arxiu = self.rename_file('error')
@@ -290,7 +293,7 @@ class FitxerSips(object):
             if res and res['updatedExisting'] is False:
                 collection.insert(document)
         except pymongo.errors.OperationFailure:
-            print "ERROR a l'actualitzar el log"
+            logger.error("ERROR a l'actualitzar el log")
 
     def log_actualitzar(self, level, message):
         collection = self.mongodb.log_fitxer
@@ -301,7 +304,7 @@ class FitxerSips(object):
             if res and res['updatedExisting'] is False:
                 collection.insert(document)
         except pymongo.errors.OperationFailure:
-            print "ERROR a l'actualitzar el log"
+            logger.error("ERROR a l'actualitzar el log")
 
     def update_progress(self, progress):
         collection = self.mongodb.log_fitxer
@@ -309,4 +312,4 @@ class FitxerSips(object):
             collection.update({'name': self.arxiu},
                               {'$set': {'progres': progress}})
         except pymongo.errors.OperationFailure:
-            print "ERROR a l'actualitzar el log"
+            logger.error("ERROR a l'actualitzar el log")

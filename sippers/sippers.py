@@ -2,6 +2,7 @@
 
 import os
 import time
+from sippers import logger
 from sippers.fitxer_sips import FitxerSips
 from datetime import datetime
 
@@ -15,7 +16,7 @@ def agafarxius(path):
     llista_arxius = []
     for fitxer in os.listdir(path):
         fparts = fitxer.split(".")
-        print "fparts {}".format(fparts)
+        logger.debug("fparts {}".format(fparts))
         if fparts[-1].upper() == 'ZIP':
             # right now, as epoch
             now = int(time.mktime(datetime.now().timetuple()))
@@ -27,15 +28,14 @@ def agafarxius(path):
 
 
 def run(directori, dbname, dburi):
-    print directori
-    print dbname
-    print dburi
+    logger.debug('directori: %s, dbname: %s, dburi: %s',
+                 directori, dbname, dburi)
 
     llista_arxius = agafarxius(directori)
     # Processar per cada un dels arxius zip
     for arxiu in llista_arxius:
         # Log per els errors de lectura
-        print "Arxiu:{}".format(arxiu)
+        logger.debug("Arxiu:{}".format(arxiu))
         fitxer_sips = FitxerSips(arxiu=arxiu, directori=directori,
                                  dbname=dbname, dburi=dburi)
         if fitxer_sips.parser:

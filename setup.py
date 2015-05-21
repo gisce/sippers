@@ -15,6 +15,7 @@ setup(
         sippers=sippers.sippers:main
     """,
     install_requires=[
+        "raven",
         "pymongo<3.0",
         "tablib"
     ],
