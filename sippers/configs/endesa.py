@@ -1,6 +1,9 @@
-from parser import Parser, register
+from __future__ import absolute_import
 from datetime import datetime
 import copy
+
+from sippers import logger
+from sippers.configs.parser import Parser, register
 
 
 class Endesa(Parser):
@@ -120,7 +123,7 @@ class Endesa(Parser):
             # Llista dels valors del tros que agafem dins la linia
             data.append(slinia)
             if self.num_fields and len(slinia) != int(self.num_fields):
-                print "Row lenght incorrect"
+                logger.error("Row lenght incorrect")
             for d in self.descartar:
                 del data[d]
             # Creo el diccionari per fer l'insert al mongo
@@ -146,7 +149,7 @@ class Endesa(Parser):
             # #Faig el wipe per no extendre l'error
             # self.data.wipe()
             # self.data.headers = self.headers_conf
-            print "Row Error: %s: %s" % (str(e), line)
+            logger.error("Row Error: %s: %s" % (str(e), line))
 
 
 register(Endesa)
@@ -260,7 +263,7 @@ class EndesaCons(Parser):
                 data.append(fixlist + part)
                 if (self.num_fields and len(fixlist + part) != int(
                         self.num_fields)):
-                    print "Row lenght incorrect"
+                    logger.error("Row lenght incorrect")
                 for d in self.descartar:
                     del data[d]
                 # Creo el diccionari per fer l'insert al mongo
@@ -286,7 +289,7 @@ class EndesaCons(Parser):
                 # #Faig el wipe per no extendre l'error
                 # self.data.wipe()
                 # self.data.headers = self.headers_conf
-                print "Row Error: %s: %s" % (str(e), line)
+                logger.error("Row Error: %s: %s" % (str(e), line))
 
 
 register(EndesaCons)
