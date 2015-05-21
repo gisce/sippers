@@ -42,7 +42,12 @@ def setup_logging(level=None, logfile=None):
     sentry_handler = SentryHandler(sentry, level=logging.ERROR)
     logger.addHandler(sentry_handler)
 
+    if isinstance(level, basestring):
+        level = getattr(logging, level.upper(), None)
+
     if level is None:
-        logger.setLevel(logging.INFO)
+        level = logging.INFO
+
+    logger.setLevel(level)
 
     return logger
