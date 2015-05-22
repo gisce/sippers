@@ -29,3 +29,11 @@ class SipsFileTest(SipsTestCaseBase):
             self.assertEqual(progress, '100%')
             self.assertEqual(naturalsize(read), sf.stats.size)
             sf.close()
+
+    def test_with_statement(self):
+        sips_file = self.SIPS_DATA.values()[0]['file']
+        path = get_data(sips_file)
+        with SipsFile(path) as sf:
+            for _ in sf:
+                pass
+        print sf.fd.closed
