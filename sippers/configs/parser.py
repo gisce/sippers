@@ -4,9 +4,6 @@ from datetime import datetime
 import os
 import re
 import tablib
-import pymongo
-
-from sippers import logger
 
 
 def parse_datetime(value, dataformat):
@@ -79,7 +76,7 @@ class Parser(object):
             return re.match(cls.pattern, os.path.basename(sips_file))
         return False
 
-    def __init__(self, mongodb=None):
+    def __init__(self):
         self.types = []
         self.headers_conf = []
         self.positions = []
@@ -89,28 +86,9 @@ class Parser(object):
         self.pkeys = None
         self.date_format = None
         self.pattern = None
-        self.mongodb = mongodb
-
-    def load(self):
-        self.load_config()
-        self.validate_mongo_counters()
-        self.prepare_mongo()
 
     def load_config(self):
         raise NotImplementedError("Should have implemented this")
-
-    def insert_mongo(self, document, collection):
-        # Afegeixo les entrades
-        try:
-            pvalues = [document[k] for k in self.pkeys]
-            query = dict(zip(self.pkeys, pvalues))
-
-            res = collection.update(query, document)
-            if res and res['updatedExisting'] is False:
-                collection.insert(document)
-        except pymongo.errors.OpertionFailure:
-            logger.error("Error: A l'insert del mongodb")
-        return True
 
     def prepare_data_set(self, fields, types, headers_conf, magnitudes):
         data = tablib.Dataset()
@@ -139,12 +117,6 @@ class Parser(object):
                 data.add_formatter(
                     field[0], lambda a: a and float(a)/MAGNITUDS['kWh'] or 0)
         return data
-
-    def validate_mongo_counters(self):
-        raise NotImplementedError("Should have implemented this")
-
-    def prepare_mongo(self):
-        raise NotImplementedError("Should have implemented this")
 
     def parse_line(self, line):
         raise NotImplementedError("Should have implemented this")

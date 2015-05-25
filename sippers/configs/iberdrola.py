@@ -1,6 +1,4 @@
 from __future__ import absolute_import
-from datetime import datetime
-import tablib
 import copy
 
 from sippers import logger
@@ -16,8 +14,8 @@ class Iberdrola(Parser):
     descartar = ['any_sub', 'trimestre_sub']
     encoding = "iso-8859-15"
 
-    def __init__(self, mongodb=None):
-        super(Iberdrola, self).__init__(mongodb)
+    def __init__(self):
+        super(Iberdrola, self).__init__()
         self.pkeys = ['name', ]
         self.fields_ps = [
             ('name', {'type': 'char', 'position': 0, 'magnituds': False,
@@ -50,7 +48,7 @@ class Iberdrola(Parser):
             ('data_alta', {'type': "datetime", "position": 11,
                            'magnituds': False, 'collection': 'ps',
                            'length': 10}),
-            ('tarifa', {'type': "char", "position": 12, 'magnituds': "kWh",
+            ('tarifa', {'type': "char", "position": 12, 'magnituds': False,
                         'collection': 'ps', 'length': 3}),
             ('tensio', {'type': "interger", "position": 13, 'magnituds': False,
                         'collection': 'ps', 'length': 9}),
@@ -297,6 +295,25 @@ class Iberdrola(Parser):
 
         self.data = self.prepare_data_set(self.fields, self.types,
                                           self.headers_conf, self.magnitudes)
+        tarifes = {
+            '001': "2.0A",
+			'003': "3.0A",
+			'004': "2.0DHA",
+			'005': "2.1A",
+			'006': "2.1DHA",
+			'007': "2.0DHS",
+			'008': "2.1DHS",
+			'011': "3.1A",
+			'012': "6.1",
+			'013': "6.2",
+			'014': "6.3",
+			'015': "6.4",
+			'016': "6.5"
+        }
+        self.data.add_formatter(
+            'tarifa',
+            lambda a: tarifes.get(a, None)
+        )
         types = []
         headers_conf = []
         positions = []
@@ -311,27 +328,8 @@ class Iberdrola(Parser):
         self.data_consums = self.prepare_data_set(self.fields_consums, types,
                                                   headers_conf, magnitudes)
 
-    def validate_mongo_counters(self):
-        # Comprovo que la colletion estigui creada, si no la creo
-        if not self.mongodb['counters'].find(
-                {"_id": "giscedata_sips_ps"}).count():
-            self.mongodb['counters'].save(
-                {"_id": "giscedata_sips_ps", "counter": 1})
-        if not self.mongodb['counters'].find(
-                {"_id": "giscedata_sips_consums"}).count():
-            self.mongodb['counters'].save({"_id": "giscedata_sips_consum",
-                                           "counter": 1})
-        self.mongodb.eval(
-            'db.giscedata_sips_ps.createIndex({"name": 1})')
-        self.mongodb.eval(
-            'db.giscedata_sips_consums.createIndex({"name": 1})')
-
-    def prepare_mongo(self):
-        self.collection = self.mongodb.giscedata_sips_ps
-        self.collection_cons = self.mongodb.giscedata_sips_consums
-
     def parse_ps(self, line):
-        slinia = tuple(self.slices(line, [x[1]['length'] for x in self.fields_ps]))
+        slinia = tuple(self.slices(unicode(line), [x[1]['length'] for x in self.fields_ps]))
         slinia = map(lambda s: s.strip(), slinia)
         pslist = slinia[0:len(self.fields_ps)]
         data = copy.deepcopy(self.data)
