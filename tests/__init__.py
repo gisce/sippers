@@ -1,3 +1,4 @@
+import codecs
 import os
 from unittest import TestCase
 
@@ -17,7 +18,7 @@ class SipsTestCaseBase(TestCase):
 
     @staticmethod
     def load_sips(sips_file):
-        with open(get_data(sips_file), 'r') as f:
+        with codecs.open(get_data(sips_file), 'r', encoding='iso-8859-1') as f:
             return {'file': sips_file, 'content': f.read()}
 
     @classmethod

@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import codecs
 import os
 
 from sippers.configs.parser import get_parser
@@ -25,8 +26,9 @@ class SipsFile(object):
     def __init__(self, path):
         self.path = path
         self.stats = SipsFileStats(os.stat(path))
-        self.fd = open(path, 'r')
-        self.parser = get_parser(self.path)
+        self.parser = get_parser(self.path)()
+        self.fd = codecs.open(path, encoding=self.parser.encoding)
+        self.parser.load_config()
 
     def __iter__(self):
         return self
@@ -34,7 +36,7 @@ class SipsFile(object):
     def next(self):
         for line in self.fd:
             self.stats.read += len(line)
-            return line
+            return self.parser.parse_line(line)
         raise StopIteration()
 
     def __enter__(self):

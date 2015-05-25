@@ -71,6 +71,8 @@ def get_parser(sips_file):
 
 class Parser(object):
 
+    encoding = "iso-8859-15"
+
     @classmethod
     def detect(cls, sips_file):
         if cls.pattern:

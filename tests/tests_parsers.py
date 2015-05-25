@@ -1,4 +1,5 @@
-from . import SipsTestCaseBase
+from . import SipsTestCaseBase, get_data
+from sippers.file import SipsFile
 
 
 class TestRegisteredClasses(SipsTestCaseBase):
@@ -10,3 +11,15 @@ class TestRegisteredClasses(SipsTestCaseBase):
             'sippers.configs.endesa.Endesa',
             'sippers.configs.endesa.EndesaCons'
         ])
+
+
+class TestParser(SipsTestCaseBase):
+    def test_parse_ps(self):
+        for dso in self.SIPS_DATA:
+            sips_file = self.SIPS_DATA[dso]['file']
+            path = get_data(sips_file)
+            lines = []
+            with SipsFile(path) as sf:
+                for line in sf:
+                    lines.append(line['ps'])
+            self.assertEqual(len(lines), 10)

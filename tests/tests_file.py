@@ -13,7 +13,7 @@ class SipsFileTest(SipsTestCaseBase):
             sf = SipsFile(path)
             content = ''
             for line in sf:
-                content += line
+                content += line['orig']
             self.assertEqual(orig_content, content)
             sf.close()
 
@@ -22,7 +22,6 @@ class SipsFileTest(SipsTestCaseBase):
             sips_file = self.SIPS_DATA[dso]['file']
             path = get_data(sips_file)
             sf = SipsFile(path)
-            print sf.stats.size
             for _ in sf:
                 read = sf.stats.read
                 progress = sf.stats.progress
