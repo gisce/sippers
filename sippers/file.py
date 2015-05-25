@@ -68,7 +68,7 @@ class SipsFile(object):
         else:
             self.parser = parser
         if fd is None:
-            self.fd = codecs.open(path, encoding=self.parser.encoding)
+            self.fd = open(path, 'r')
             self.stats = SipsFileStats(os.fstat(self.fd.fileno()).st_size)
         else:
             self.fd = fd

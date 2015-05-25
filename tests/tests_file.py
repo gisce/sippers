@@ -1,6 +1,22 @@
-from sippers.file import SipsFile
+import codecs
+import unittest
+
+from sippers.file import SipsFile, PackedSipsFile
 from sippers.utils import naturalsize
 from . import SipsTestCaseBase, get_data
+
+
+class PackedSipsFileTest(SipsTestCaseBase):
+
+    def test_iterator_file(self):
+        for dso in self.SIPS_PACKED_DATA:
+            sips_file = self.SIPS_PACKED_DATA[dso]['file']
+            psf = PackedSipsFile(sips_file)
+            for sf in psf:
+                for _ in sf:
+                    pass
+                self.assertEqual(sf.stats.progress, '100%')
+            self.assertEqual(psf.stats.progress, '100%')
 
 
 class SipsFileTest(SipsTestCaseBase):
@@ -8,9 +24,10 @@ class SipsFileTest(SipsTestCaseBase):
     def test_iterator_file(self):
         for dso in self.SIPS_DATA:
             sips_file = self.SIPS_DATA[dso]['file']
-            path = get_data(sips_file)
-            orig_content = self.SIPS_DATA[dso]['content']
-            sf = SipsFile(path)
+            sf = SipsFile(sips_file)
+            with codecs.open(self.SIPS_DATA[dso]['file'],
+                             encoding=sf.parser.encoding) as orig:
+                orig_content = orig.read()
             content = ''
             for line in sf:
                 content += line['orig']
@@ -35,4 +52,4 @@ class SipsFileTest(SipsTestCaseBase):
         with SipsFile(path) as sf:
             for _ in sf:
                 pass
-        print sf.fd.closed
+        self.assertIs(sf.fd.closed, True)

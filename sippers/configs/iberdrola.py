@@ -360,7 +360,7 @@ class Iberdrola(Parser):
         return measures
 
     def parse_line(self, line):
-        line = line.encode('utf-8')
+        line = unicode(line.decode(self.encoding))
         parsed = {'ps': {}, 'measures': [], 'orig': line}
         try:
             parsed['ps'] = self.parse_ps(line)

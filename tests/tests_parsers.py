@@ -17,9 +17,8 @@ class TestParser(SipsTestCaseBase):
     def test_parse_ps(self):
         for dso in self.SIPS_DATA:
             sips_file = self.SIPS_DATA[dso]['file']
-            path = get_data(sips_file)
             lines = []
-            with SipsFile(path) as sf:
+            with SipsFile(sips_file) as sf:
                 for line in sf:
                     lines.append(line['ps'])
             self.assertEqual(len(lines), 10)
