@@ -24,3 +24,7 @@ class SipsTestCaseBase(TestCase):
         cls.SIPS_DATA = {
             'IBERDROLA': cls.load_sips('HGSBKA_TXT2.TXT'),
         }
+        cls.SIPS_PACKED_DATA = {
+            'ENDESA_PS': {'file': get_data('ERZ.INF.SEG01.ZIP')},
+            'ENDESA_MEASURES': {'file': get_data('ERZ.INF2.SEG01.ZIP')}
+        }
