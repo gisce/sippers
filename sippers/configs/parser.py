@@ -70,17 +70,6 @@ def get_parser(sips_file):
 
 
 class Parser(object):
-    types = []
-    headers_conf = []
-    positions = []
-    magnitudes = []
-    vals_long = []
-    data = None
-    mongodb = None
-    fields = None
-    pkeys = None
-    date_format = None
-    pattern = None
 
     @classmethod
     def detect(cls, sips_file):
@@ -89,14 +78,19 @@ class Parser(object):
         return False
 
     def __init__(self, mongodb=None):
-        #Creo el dataset buit
-        self.data = tablib.Dataset()
+        self.types = []
+        self.headers_conf = []
+        self.positions = []
+        self.magnitudes = []
+        self.vals_long = []
+        self.fields = None
+        self.pkeys = None
+        self.date_format = None
+        self.pattern = None
         self.mongodb = mongodb
 
     def load(self):
         self.load_config()
-        self.data = self.prepare_data_set(self.fields, self.types,
-                                          self.headers_conf, self.magnitudes)
         self.validate_mongo_counters()
         self.prepare_mongo()
 
