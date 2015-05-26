@@ -16,7 +16,7 @@ class PackedSipsFileTest(SipsTestCaseBase):
                 for _ in sf:
                     pass
                 self.assertEqual(sf.stats.progress, '100%')
-            self.assertEqual(psf.stats.progress, '100%')
+            self.assertEqual(psf.stats.progress, '100% (1/1)')
 
 
 class SipsFileTest(SipsTestCaseBase):

@@ -24,10 +24,23 @@ class SipsFileStats(object):
         )
 
 
+class PackedSipsFileStats(SipsFileStats):
+    def __init__(self, size, n_files):
+        super(PackedSipsFileStats, self).__init__(size)
+        self.n_files = n_files
+        self.idx_file = 0
+
+    @property
+    def progress(self):
+        return '{} ({}/{})'.format(
+            super(PackedSipsFileStats, self).progress,
+            self.idx_file, self.n_files
+        )
+
+
 class PackedSipsFile(object):
     def __init__(self, path):
         self.path = path
-        self.stats = SipsFileStats(os.stat(path).st_size)
         self.parser = get_parser(self.path)()
         if not zipfile.is_zipfile(self.path):
             logger.error("File %s is not a zip file", self.path)
@@ -35,12 +48,16 @@ class PackedSipsFile(object):
         self.fd = zipfile.ZipFile(self.path)
         self.parser = get_parser(self.path)()
         self.files = iter(self.fd.namelist())
+        self.stats = PackedSipsFileStats(
+            os.stat(path).st_size, len(self.fd.namelist())
+        )
 
     def __iter__(self):
         return self
 
     def next(self):
         for filename in self.files:
+            self.stats.idx_file += 1
             stats = SipsFileStats(self.fd.getinfo(filename).file_size)
             sips_fd = self.fd.open(filename)
             sf = SipsFile(filename, fd=sips_fd, parser=self.parser)
