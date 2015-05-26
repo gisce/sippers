@@ -276,6 +276,16 @@ class Iberdrola(Parser):
 
         self.fields = self.fields_ps
 
+    def get_pos(self, field_name):
+        start = 0
+        stop = 0
+        for field in self.fields:
+            stop = start + field[1]['length']
+            if field[0] == field_name:
+                break
+            start += stop
+        return start, stop
+
     def slices(self, line, vals):
         # La llista amb les mides dels camps entren per els args.
         position = 0
@@ -349,12 +359,16 @@ class Iberdrola(Parser):
         step = sum([x[1]['length'] for x in self.fields_consums])
         c_line = line[start:start+step].strip()
         length_c = [x[1]['length'] for x in self.fields_consums]
+        i, j = self.get_pos('name')
+        cups = line[i:j]
         while c_line:
             m = tuple(self.slices(c_line, length_c))
             m = map(lambda s: s.strip(), m)
             data_consums = copy.deepcopy(self.data_consums)
             data_consums.append(m)
-            measures.append(data_consums.dict[0])
+            consums = data_consums.dict[0]
+            consums['name'] = cups
+            measures.append(consums)
             start += step
             c_line = line[start:start + step].strip()
         return measures
