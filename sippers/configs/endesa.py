@@ -13,7 +13,6 @@ class Endesa(Parser):
     num_fields = 43
     date_format = '%Y%m%d'
     descartar = ['facturacio', 'salt']
-    collection = None
     encoding = "iso-8859-15"
 
     def __init__(self):
@@ -129,7 +128,6 @@ class EndesaCons(Parser):
     num_fields = 39
     date_format = '%Y%m%d'
     descartar = []
-    collection = None
     encoding = "iso-8859-15"
 
     def __init__(self):
@@ -201,7 +199,7 @@ class EndesaCons(Parser):
             self.types.append(field[1]['type'])
             self.headers_conf.append(field[0])
             self.positions.append(field[1]['position'])
-            self.magnitudes.append(field[1]['magnituds'])
+            self.magnitudes.append(field[1].get('magnituds'))
 
         self.data = self.prepare_data_set(self.fields, self.types,
                                           self.headers_conf,
