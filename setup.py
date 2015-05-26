@@ -19,7 +19,7 @@ setup(
         "pymongo<3.0",
         "tablib",
         "osconf",
-        "marshmallow"
+        "marshmallow>=2.0.0b2"
     ],
     test_suite='tests',
 )
