@@ -2,3 +2,4 @@ raven
 tablib
 pymongo<3.0
 osconf
+marshmallow

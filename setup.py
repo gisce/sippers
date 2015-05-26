@@ -18,7 +18,8 @@ setup(
         "raven",
         "pymongo<3.0",
         "tablib",
-        "osconf"
+        "osconf",
+        "marshmallow"
     ],
     test_suite='tests',
 )

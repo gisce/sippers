@@ -41,3 +41,8 @@ def naturalsize(value, binary=False, gnu=False, format='%.1f'):
     if gnu:
         return (format + '%s') % ((base * bytes / unit), s)
     return (format + ' %s') % ((base * bytes / unit), s)
+
+
+
+def build_dict(headers, data):
+    return dict(zip(headers, data))
