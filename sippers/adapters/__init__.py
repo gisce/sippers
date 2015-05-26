@@ -1,5 +1,4 @@
 from marshmallow import Schema
-from sippers import logger
 from sippers.models import SipsSchema
 
 
