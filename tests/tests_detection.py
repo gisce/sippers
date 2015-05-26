@@ -1,9 +1,9 @@
 from . import SipsTestCaseBase
-from sippers.configs.parser import get_parser
+from sippers.parsers.parser import get_parser
 
 
 COMPANY_PARSERS = {
-    "IBERDROLA": "sippers.configs.iberdrola.Iberdrola"
+    "IBERDROLA": "sippers.parsers.iberdrola.Iberdrola"
 }
 
 

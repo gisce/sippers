@@ -3,7 +3,7 @@ from datetime import datetime
 import copy
 
 from sippers import logger
-from sippers.configs.parser import Parser, register
+from sippers.parsers.parser import Parser, register
 
 
 class Endesa(Parser):

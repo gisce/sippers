@@ -3,7 +3,7 @@ import codecs
 import os
 import zipfile
 
-from sippers.configs.parser import get_parser
+from sippers.parsers.parser import get_parser
 from sippers.utils import naturalsize
 from sippers import logger
 
