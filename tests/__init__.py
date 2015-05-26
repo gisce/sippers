@@ -17,11 +17,14 @@ class SipsTestCaseBase(TestCase):
 
     @staticmethod
     def load_sips(sips_file):
-        with open(get_data(sips_file), 'r') as f:
-            return {'file': sips_file, 'content': f.read()}
+        return {'file': get_data(sips_file)}
 
     @classmethod
     def setUpClass(cls):
         cls.SIPS_DATA = {
-            'IBERDROLA': cls.load_sips('HGSBKA_TXT2.TXT')
+            'IBERDROLA': cls.load_sips('HGSBKA_TXT2.TXT'),
+        }
+        cls.SIPS_PACKED_DATA = {
+            'ENDESA_PS': {'file': get_data('ERZ.INF.SEG01.ZIP')},
+            'ENDESA_MEASURES': {'file': get_data('ERZ.INF2.SEG01.ZIP')}
         }

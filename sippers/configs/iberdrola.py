@@ -1,6 +1,4 @@
 from __future__ import absolute_import
-from datetime import datetime
-import tablib
 import copy
 
 from sippers import logger
@@ -14,14 +12,10 @@ class Iberdrola(Parser):
     num_fields = 00
     date_format = '%Y-%m-%d'
     descartar = ['any_sub', 'trimestre_sub']
-    collection = None
-    collection_cons = None
-    data_consums = None
+    encoding = "iso-8859-15"
 
-    def __init__(self, mongodb=None):
-        super(Parser, self).__init__()
-        self.data_consums = tablib.Dataset()
-
+    def __init__(self):
+        super(Iberdrola, self).__init__()
         self.pkeys = ['name', ]
         self.fields_ps = [
             ('name', {'type': 'char', 'position': 0, 'magnituds': False,
@@ -30,7 +24,7 @@ class Iberdrola(Parser):
                           'collection': 'ps', 'length': 150}),
             ('poblacio', {'type': "char", "position": 2, 'magnituds': False,
                           'collection': 'ps', 'length': 45}),
-            ('codi_postal"', {'type': "char", "position": 3, 'magnituds': False,
+            ('codi_postal', {'type': "char", "position": 3, 'magnituds': False,
                               'collection': 'ps', 'length': 10}),
             ('provincia', {'type': "char", "position": 4, 'magnituds': False,
                            'collection': 'ps', 'length': 45}),
@@ -54,7 +48,7 @@ class Iberdrola(Parser):
             ('data_alta', {'type': "datetime", "position": 11,
                            'magnituds': False, 'collection': 'ps',
                            'length': 10}),
-            ('tarifa', {'type': "char", "position": 12, 'magnituds': "kWh",
+            ('tarifa', {'type': "char", "position": 12, 'magnituds': False,
                         'collection': 'ps', 'length': 3}),
             ('tensio', {'type': "interger", "position": 13, 'magnituds': False,
                         'collection': 'ps', 'length': 9}),
@@ -149,61 +143,148 @@ class Iberdrola(Parser):
                                'magnituds': False, 'collection': 'ps',
                                'length': 1}), ]
         self.fields_consums = [
-            ('any_consum', {'type': "datetime", "position": 45,
-                            'magnituds': False, 'collection': 'consum',
-                            'length': 4}),
-            ('facturacio_consum', {'type': "integer", "position": 46,
-                                   'magnituds': False, 'collection': 'consum',
-                                   'length': 4}),
-            ('data_anterior', {'type': "datetime", "position": 47,
-                               'magnituds': False, 'collection': 'consum',
-                               'length': 10}),
-            ('data_final', {'type': "datetime", "position": 48,
-                            'magnituds': False, 'collection': 'consum',
-                            'length': 10}),
-            ('tarifa_consums', {'type': "char", "position": 49,
-                                'magnituds': False, 'collection': 'consum',
-                                'length': 4}),
-            ('DH', {'type': "char", "position": 50, 'magnituds': False,
-                    'collection': 'consum', 'length': 3}),
-            ('activa_1', {'type': "float", "position": 51, 'magnituds': "kWh",
-                          'collection': 'consum', 'length': 14}),
-            ('activa_2', {'type': "float", "position": 52, 'magnituds': "kWh",
-                          'collection': 'consum', 'length': 14}),
-            ('activa_3', {'type': "float", "position": 53, 'magnituds': "kWh",
-                          'collection': 'consum', 'length': 14}),
-            ('activa_4', {'type': "float", "position": 54, 'magnituds': "kWh",
-                          'collection': 'consum', 'length': 14}),
-            ('activa_5', {'type': "float", "position": 55, 'magnituds': "kWh",
-                          'collection': 'consum', 'length': 14}),
-            ('activa_6', {'type': "float", "position": 56, 'magnituds': "kWh",
-                          'collection': 'consum', 'length': 14}),
-            ('reactiva_1', {'type': "float", "position": 57, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 14}),
-            ('reactiva_2', {'type': "float", "position": 58, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 14}),
-            ('reactiva_3', {'type': "float", "position": 59, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 14}),
-            ('reactiva_4', {'type': "float", "position": 60, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 14}),
-            ('reactiva_5', {'type': "float", "position": 61, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 14}),
-            ('reactiva_6', {'type': "float", "position": 62, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 14}),
-            ('potencia_1', {'type': "float", "position": 63, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 11}),
-            ('potencia_2', {'type': "float", "position": 64, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 11}),
-            ('potencia_3', {'type': "float", "position": 65, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 11}),
-            ('potencia_4', {'type': "float", "position": 66, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 11}),
-            ('potencia_5', {'type': "float", "position": 67, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 11}),
-            ('potencia_6', {'type': "float", "position": 68, 'magnituds': "kWh",
-                            'collection': 'consum', 'length': 11}), ]
+            ('any_consum', {
+                'type': "int",
+                'length': 4
+            }),
+            ('facturacio_consum', {
+                'type': "integer",
+                'length': 4
+            }),
+            ('data_anterior', {
+                'type': "datetime",
+                'length': 10
+            }),
+            ('data_final', {
+                'type': "datetime",
+                'length': 10
+            }),
+            ('tarifa_consums', {
+                'type': "char",
+                'length': 4
+            }),
+            ('DH', {
+                'type': "char",
+                'length': 3
+            }),
+            ('activa_1', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('activa_2', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('activa_3', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('activa_4', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('activa_5', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('activa_6', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('activa_7', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('reactiva_1', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('reactiva_2', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('reactiva_3', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('reactiva_4', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('reactiva_5', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('reactiva_6', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('reactiva_7', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 14
+            }),
+            ('potencia_1', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 11
+            }),
+            ('potencia_2', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 11
+            }),
+            ('potencia_3', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 11
+            }),
+            ('potencia_4', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 11
+            }),
+            ('potencia_5', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 11
+            }),
+            ('potencia_6', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 11
+            }),
+            ('potencia_7', {
+                'type': "float",
+                'magnituds': "kWh",
+                'length': 11
+            })
+        ]
 
         self.fields = self.fields_ps
+
+    def get_pos(self, field_name):
+        start = 0
+        stop = 0
+        for field in self.fields:
+            stop = start + field[1]['length']
+            if field[0] == field_name:
+                break
+            start += stop
+        return start, stop
 
     def slices(self, line, vals):
         # La llista amb les mides dels camps entren per els args.
@@ -222,6 +303,27 @@ class Iberdrola(Parser):
             self.magnitudes.append(field[1]['magnituds'])
             self.vals_long.append(field[1]['length'])
 
+        self.data = self.prepare_data_set(self.fields, self.types,
+                                          self.headers_conf, self.magnitudes)
+        tarifes = {
+            '001': "2.0A",
+			'003': "3.0A",
+			'004': "2.0DHA",
+			'005': "2.1A",
+			'006': "2.1DHA",
+			'007': "2.0DHS",
+			'008': "2.1DHS",
+			'011': "3.1A",
+			'012': "6.1",
+			'013': "6.2",
+			'014': "6.3",
+			'015': "6.4",
+			'016': "6.5"
+        }
+        self.data.add_formatter(
+            'tarifa',
+            lambda a: tarifes.get(a, None)
+        )
         types = []
         headers_conf = []
         positions = []
@@ -230,109 +332,58 @@ class Iberdrola(Parser):
         for field in self.fields_consums:
             types.append(field[1]['type'])
             headers_conf.append(field[0])
-            positions.append(field[1]['position'])
-            magnitudes.append(field[1]['magnituds'])
+            magnitudes.append(field[1].get('magnituds', False))
             self.vals_long.append(field[1]['length'])
 
         self.data_consums = self.prepare_data_set(self.fields_consums, types,
                                                   headers_conf, magnitudes)
 
-    def validate_mongo_counters(self):
-        # Comprovo que la colletion estigui creada, si no la creo
-        if not self.mongodb['counters'].find(
-                {"_id": "giscedata_sips_ps"}).count():
-            self.mongodb['counters'].save(
-                {"_id": "giscedata_sips_ps", "counter": 1})
-        if not self.mongodb['counters'].find(
-                {"_id": "giscedata_sips_consums"}).count():
-            self.mongodb['counters'].save({"_id": "giscedata_sips_consum",
-                                           "counter": 1})
-        self.mongodb.eval(
-            'db.giscedata_sips_ps.createIndex({"name": 1})')
-        self.mongodb.eval(
-            'db.giscedata_sips_consums.createIndex({"name": 1})')
+    def parse_ps(self, line):
+        slinia = tuple(self.slices(unicode(line), [x[1]['length'] for x in self.fields_ps]))
+        slinia = map(lambda s: s.strip(), slinia)
+        pslist = slinia[0:len(self.fields_ps)]
+        data = copy.deepcopy(self.data)
+        # Llista dels valors del tros que agafem dins dels sips
+        try:
+            data.append(pslist)
+        except Exception, e:
+            logger.error(e)
+        for d in self.descartar:
+            del data[d]
+        # Creo el diccionari per fer l'insert al mongo
+        return data.dict[0]
 
-    def prepare_mongo(self):
-        self.collection = self.mongodb.giscedata_sips_ps
-        self.collection_cons = self.mongodb.giscedata_sips_consums
+    def parse_measures(self, line):
+        measures = []
+        start = sum([x[1]['length'] for x in self.fields_ps])
+        step = sum([x[1]['length'] for x in self.fields_consums])
+        c_line = line[start:start+step].strip()
+        length_c = [x[1]['length'] for x in self.fields_consums]
+        i, j = self.get_pos('name')
+        cups = line[i:j]
+        while c_line:
+            m = tuple(self.slices(c_line, length_c))
+            m = map(lambda s: s.strip(), m)
+            data_consums = copy.deepcopy(self.data_consums)
+            data_consums.append(m)
+            consums = data_consums.dict[0]
+            consums['name'] = cups
+            measures.append(consums)
+            start += step
+            c_line = line[start:start + step].strip()
+        return measures
 
     def parse_line(self, line):
-        slinia = tuple(self.slices(line, self.vals_long))
-        slinia = map(lambda s: s.strip(), slinia)
-
-        # Inserto el SIPS
-        pslist = slinia[0:len(self.fields_ps)]
-        name = pslist[0]
-
-        # Usuari del mongodb
-        user = 'default'
+        line = unicode(line.decode(self.encoding))
+        parsed = {'ps': {}, 'measures': [], 'orig': line}
         try:
-            data = copy.deepcopy(self.data)
-            # Llista dels valors del tros que agafem dins dels sips
-            data.append(pslist)
-            for d in self.descartar:
-                del data[d]
-            # Creo el diccionari per fer l'insert al mongo
-            document = data.dict[0]
-            # Id incremental
-            counter = self.mongodb['counters'].find_and_modify(
-                {'_id': 'giscedata_sips_ps'},
-                {'$inc': {'counter': 1}})
-            # Update del index
-            document.update(
-                {'id': counter['counter'],
-                 'create_uid': user,
-                 'create_date': datetime.now()}
-            )
-            # Inserto el document al mongodb
-            self.insert_mongo(document, self.collection)
-
-            # #Borrar els valors del tros
-            # self.data.wipe()
-            # #Torno a establir les headers
-            # self.data.headers = self.headers_conf
+            parsed['ps'] = self.parse_ps(line)
         except Exception as e:
-            # #Faig el wipe per no extendre l'error
-            # self.data.wipe()
-            # self.data.headers = self.headers_conf
-            logger.error("Row Error")
-
-        for plinia in range(len(self.fields_ps), len(slinia),
-                            len(self.fields_consums)):
-            # Usuari del mongodb
-            user = 'default'
-            try:
-                data_consums = copy.deepcopy(self.data_consums)
-
-                # Llista dels valors del tros que agafem dins la linia
-                part = slinia[plinia:(len(self.fields_consums)+plinia)]
-                data_consums.append(part)
-
-                # Creo el diccionari per fer l'insert al mongo
-                document = data_consums.dict[0]
-                # Id incremental
-                counter = self.mongodb['counters'].find_and_modify(
-                    {'_id': 'giscedata_sips_consums'},
-                    {'$inc': {'counter': 1}})
-                # Update del index
-                document.update(
-                    {'id': counter['counter'],
-                     'create_uid': user,
-                     'create_date': datetime.now(),
-                     'name': name}
-                )
-                # Inserto el document al mongodb
-                self.insert_mongo(document, self.collection_cons)
-
-                # #Borrar els valors del tros
-                # self.data_consums.wipe()
-                # #Torno a establir les headers
-                # self.data_consums.headers = self.headers_conf
-            except Exception as e:
-                # #Faig el wipe per no extendre l'error
-                # self.data_consums.wipe()
-                # self.data_consums.headers = self.headers_conf
-                logger.error("Row Error consums: %s: %s" % (str(e), line))
-
+            logger.error("Row Error %s", e)
+        try:
+            parsed['measures'] = self.parse_measures(line)
+        except Exception as e:
+            logger.error("Row Error consums: %s", e)
+        return parsed
 
 register(Iberdrola)
