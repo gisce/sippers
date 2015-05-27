@@ -10,7 +10,7 @@ class EndesaBaseAdapter(Schema):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.Date):
                 orig = data[attr]
-                if orig != '0':
+                if orig not in ('0', '00000000'):
                     data[attr] = '{}-{}-{}'.format(
                         orig[0:4], orig[4:6], orig[6:8]
                     )
@@ -26,6 +26,14 @@ class EndesaBaseAdapter(Schema):
                     data[attr] = 0
         return data
 
+    @pre_load
+    def fix_floats(self, data):
+        for attr, field in self.fields.iteritems():
+            if isinstance(field, fields.Float):
+                if not data[attr]:
+                    data[attr] = 0
+                data[attr] = data[attr].replace(',', '.')
+        return data
 
 class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
 

@@ -43,8 +43,8 @@ class SipsSchema(Schema):
     indicatiu_icp = fields.Select(choices=['0', '1'])
     perfil_consum = fields.Select(choices=CONSUMPTION_PROFILE, allow_none=True)
     der_extensio = fields.Float()
-    der_acces_lalno = fields.Float()
-    der_access_valle = fields.Float()
+    der_acces_llano = fields.Float()
+    der_acces_valle = fields.Float()
     propietat_equip_mesura = fields.Select(choices=['0', '1'])
     propietat_icp = fields.Select(choices=['0', '1']),
     pot_cont_p1 = fields.Float()
@@ -58,12 +58,12 @@ class SipsSchema(Schema):
     data_lim_exten = fields.Date(allow_none=True)
     persona_fj = fields.Select(choices=['0', '1'], allow_none=True)
     primera_vivenda = fields.Select(choices=['0', '1'], allow_none=True)
-    fianza = fields.Integer()
+    fianza = fields.Float()
 
 
 class MeasuresSchema(Schema):
     name = fields.String(required=True)
-    data_final = fields.Date()
+    data_final = fields.Date(allow_none=True)
     real_estimada = fields.String()
     activa_1 = fields.Integer()
     tipo_a1 = fields.String()
