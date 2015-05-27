@@ -1,4 +1,4 @@
-from . import SipsTestCaseBase, get_data
+from . import SipsTestCaseBase
 from sippers.file import SipsFile, PackedSipsFile
 
 
