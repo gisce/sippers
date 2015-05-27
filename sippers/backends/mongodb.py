@@ -12,7 +12,8 @@ class MongoDBBackend(BaseBackend):
         self.db = self.connection[self.config['db']]
 
     def insert_ps(self, values, collection='giscedata_sips_ps'):
-        self.db[collection].insert(values)
+        if values:
+            self.db[collection].update({'name': values['name']}, values, True)
 
     def insert_measures(self, values, collection='giscedata_sips_consums'):
         self.db[collection].insert(values)
