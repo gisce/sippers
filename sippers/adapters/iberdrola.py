@@ -1,10 +1,10 @@
-from sippers.adapters import Adapter
+from sippers.adapters import SipsAdapter
 from sippers.models import SipsSchema
 from sippers.models.iberdrola import TARIFFS_OCSUM
 from marshmallow import pre_load
 
 
-class IberdrolaSipsAdapter(Adapter, SipsSchema):
+class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def adapt_distribuidora(self, data):

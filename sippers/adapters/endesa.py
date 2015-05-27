@@ -1,19 +1,33 @@
-from sippers.adapters import Adapter
-from sippers.models import SipsSchema
-from marshmallow import pre_load
+from sippers.adapters import SipsAdapter, MeasuresAdapter
+from sippers.models import SipsSchema, MeasuresSchema
+from marshmallow import Schema, fields, pre_load
 
 
-class EndesaSipsAdapter(Adapter, SipsSchema):
+class EndesaBaseAdapter(Schema):
 
     @pre_load
     def fix_dates(self, data):
-        for d in ('data_alta', 'data_ulti_mov', 'data_ult_canv', 'data_lim_exten'):
-            orig = data[d]
-            if orig != '0':
-                data[d] = '{}-{}-{}'.format(orig[0:4], orig[4:6], orig[6:8])
-            else:
-                data[d] = None
+        for attr, field in self.fields.iteritems():
+            if isinstance(field, fields.Date):
+                orig = data[attr]
+                if orig != '0':
+                    data[attr] = '{}-{}-{}'.format(
+                        orig[0:4], orig[4:6], orig[6:8]
+                    )
+                else:
+                    data[attr] = None
         return data
+
+    @pre_load
+    def fix_numbers(self, data):
+        for attr, field in self.fields.iteritems():
+            if isinstance(field, fields.Integer):
+                if not data[attr]:
+                    data[attr] = 0
+        return data
+
+
+class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
 
     @pre_load
     def adapt_indicatiu_icp(self, data):
@@ -77,3 +91,7 @@ class EndesaSipsAdapter(Adapter, SipsSchema):
         else:
             data['persona_fj'] = None
         return data
+
+
+class EndesaMeasuresAdapter(EndesaBaseAdapter, MeasuresSchema, MeasuresAdapter):
+    pass
