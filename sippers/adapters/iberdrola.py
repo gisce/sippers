@@ -1,5 +1,5 @@
-from sippers.adapters import SipsAdapter
-from sippers.models import SipsSchema
+from sippers.adapters import SipsAdapter, MeasuresAdapter
+from sippers.models import SipsSchema, MeasuresSchema
 from sippers.models.iberdrola import TARIFFS_OCSUM
 from marshmallow import pre_load
 
@@ -55,3 +55,6 @@ class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
         if pv and pv in pv_map:
             data['primera_vivenda'] = pv_map[pv]
         return data
+
+class IberdrolaMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
+    pass

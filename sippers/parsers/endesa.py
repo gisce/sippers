@@ -35,7 +35,7 @@ class Endesa(Parser):
     def parse_line(self, line):
         slinia = tuple(unicode(line.decode(self.encoding)).split(self.delimiter))
         slinia = map(lambda s: s.strip(), slinia)
-        parsed = {'ps': {}, 'measures': {}}
+        parsed = {'ps': {}, 'measures': {}, 'orig': line}
         try:
             data = build_dict(self.headers_ps, slinia)
             result, errors = self.adapter.load(data)
@@ -79,7 +79,7 @@ class EndesaCons(Parser):
         slinia = map(lambda s: s.strip(), slinia)
         start = self.measures_start
         step = self.measures_step
-        parsed = {'ps': {}, 'measures': []}
+        parsed = {'ps': {}, 'measures': [], 'orig': line}
         c_line = slinia[start:start+step]
         while c_line:
             c_line.insert(0, slinia[0])

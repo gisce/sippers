@@ -22,6 +22,7 @@ class TestParser(SipsTestCaseBase):
                 for line in sf:
                     self.assertIn('ps', line)
                     self.assertIn('measures', line)
+                    self.assertIn('orig', line)
                     lines.append(line['ps'])
             self.assertEqual(len(lines), 10)
         for dso in self.SIPS_PACKED_DATA:
@@ -32,5 +33,6 @@ class TestParser(SipsTestCaseBase):
                     for line in sf:
                         self.assertIn('ps', line)
                         self.assertIn('measures', line)
+                        self.assertIn('orig', line)
                         lines.append(line['ps'])
                     self.assertEqual(len(lines), 10)

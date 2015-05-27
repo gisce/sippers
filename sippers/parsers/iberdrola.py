@@ -3,17 +3,18 @@ from __future__ import absolute_import
 from sippers import logger
 from sippers.utils import build_dict
 from sippers.parsers.parser import Parser, register
-from sippers.models.iberdrola import IberdrolaSipsSchema
-from sippers.adapters.iberdrola import IberdrolaSipsAdapter
+from sippers.models.iberdrola import IberdrolaSipsSchema, IberdrolaMeasuresSchema
+from sippers.adapters.iberdrola import IberdrolaSipsAdapter, IberdrolaMeasuresAdapter
 
 
 class Iberdrola(Parser):
 
     pattern = 'HGSBKA_(E0021_TXT[A-Z0-9]+\.(zip|ZIP)|TXT[A-Z0-9]+\.TXT)'
-    date_format = '%Y-%m-%d'
     encoding = "iso-8859-15"
     ps_schema = IberdrolaSipsSchema()
     ps_adapter = IberdrolaSipsAdapter()
+    measures_schema = IberdrolaMeasuresSchema()
+    measures_adapter = IberdrolaMeasuresAdapter()
 
     def __init__(self):
         super(Iberdrola, self).__init__()
@@ -30,145 +31,17 @@ class Iberdrola(Parser):
             self.slices_ps.append(field.metadata['length'])
             self.measures_start += field.metadata['length']
 
-        self.fields_consums = [
-            ('any_consum', {
-                'type': "int",
-                'length': 4
-            }),
-            ('facturacio_consum', {
-                'type': "integer",
-                'length': 4
-            }),
-            ('data_anterior', {
-                'type': "datetime",
-                'length': 10
-            }),
-            ('data_final', {
-                'type': "datetime",
-                'length': 10
-            }),
-            ('tarifa_consums', {
-                'type': "char",
-                'length': 4
-            }),
-            ('DH', {
-                'type': "char",
-                'length': 3
-            }),
-            ('activa_1', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('activa_2', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('activa_3', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('activa_4', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('activa_5', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('activa_6', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('activa_7', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('reactiva_1', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('reactiva_2', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('reactiva_3', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('reactiva_4', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('reactiva_5', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('reactiva_6', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('reactiva_7', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 14
-            }),
-            ('potencia_1', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 11
-            }),
-            ('potencia_2', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 11
-            }),
-            ('potencia_3', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 11
-            }),
-            ('potencia_4', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 11
-            }),
-            ('potencia_5', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 11
-            }),
-            ('potencia_6', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 11
-            }),
-            ('potencia_7', {
-                'type': "float",
-                'magnituds': "kWh",
-                'length': 11
-            })
-        ]
-
+        self.fields_consums = []
         self.headers_cons = []
         self.slices_measures = []
         self.measures_step = 0
-        for field in self.fields_consums:
-            self.headers_cons.append(field[0])
-            self.measures_step += field[1]['length']
-            self.slices_measures.append(field[1]['length'])
+        for f in sorted(self.measures_schema.fields,
+                key=lambda f: self.measures_schema.fields[f].metadata['position']):
+            field = self.measures_schema.fields[f]
+            self.fields_consums.append((f, field.metadata))
+            self.headers_cons.append(f)
+            self.slices_measures.append(field.metadata['length'])
+            self.measures_step += field.metadata['length']
 
     def get_pos(self, field_name):
         start = 0
@@ -219,7 +92,10 @@ class Iberdrola(Parser):
             m = map(lambda s: s.strip(), m)
             consums = build_dict(self.headers_cons, m)
             consums['name'] = cups
-            measures.append(consums)
+            result, errors = self.measures_adapter.load(consums)
+            if errors:
+                logger.error(errors)
+            measures.append(result)
             start += step
             c_line = line[start:start + step].strip()
         return measures
