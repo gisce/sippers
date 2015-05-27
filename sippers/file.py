@@ -144,7 +144,6 @@ class SipsFile(object):
             self.stats = SipsFileStats(os.fstat(self.fd.fileno()).st_size)
         else:
             self.fd = fd
-        self.parser.load_config()
 
     def __iter__(self):
         return self

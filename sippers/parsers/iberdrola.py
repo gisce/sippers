@@ -17,8 +17,6 @@ class Iberdrola(Parser):
     measures_adapter = IberdrolaMeasuresAdapter()
 
     def __init__(self):
-        super(Iberdrola, self).__init__()
-
         self.fields_ps = []
         self.headers_ps = []
         self.slices_ps = []
@@ -61,9 +59,6 @@ class Iberdrola(Parser):
             lvals.append(line[position:position + length])
             position += length
         return lvals
-
-    def load_config(self):
-        pass
 
     def parse_ps(self, line):
         slinia = tuple(self.slices(unicode(line), self.slices_ps))

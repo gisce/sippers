@@ -10,15 +10,12 @@ from sippers.parsers.parser import Parser, register
 class Endesa(Parser):
 
     pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)'
-    date_format = '%Y%m%d'
     encoding = "iso-8859-15"
     adapter = EndesaSipsAdapter()
     schema = EndesaSipsSchema()
     delimiter = ';'
 
     def __init__(self):
-        super(Endesa, self).__init__()
-
         self.fields_ps = []
         self.headers_ps = []
         for f in sorted(self.schema.fields,
@@ -28,9 +25,6 @@ class Endesa(Parser):
             self.headers_ps.append(f)
 
         self.fields = self.fields_ps
-
-    def load_config(self):
-        pass
 
     def parse_line(self, line):
         slinia = tuple(unicode(line.decode(self.encoding)).split(self.delimiter))
@@ -54,7 +48,6 @@ class EndesaCons(Parser):
 
     delimiter = ';'
     pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)'
-    date_format = '%Y%m%d'
     encoding = "iso-8859-15"
     schema = EndesaMeasuresSchema()
     adapter = EndesaMeasuresAdapter()
@@ -70,9 +63,6 @@ class EndesaCons(Parser):
             self.headers.append(f)
         self.measures_start = 1
         self.measures_step = len(self.headers) - self.measures_start
-
-    def load_config(self):
-        pass
 
     def parse_line(self, line):
         slinia = tuple(line.split(self.delimiter))

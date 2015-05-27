@@ -17,7 +17,6 @@ setup(
     install_requires=[
         "raven",
         "pymongo<3.0",
-        "tablib",
         "osconf",
         "marshmallow>=2.0.0b2"
     ],
