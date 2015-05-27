@@ -11,11 +11,11 @@ class Endesa(Parser):
 
     pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)'
     encoding = "iso-8859-15"
-    adapter = EndesaSipsAdapter()
-    schema = EndesaSipsSchema()
     delimiter = ';'
 
-    def __init__(self):
+    def __init__(self, strict=False):
+        self.adapter = EndesaSipsAdapter(strict=strict)
+        self.schema = EndesaSipsSchema(strict=strict)
         self.fields_ps = []
         self.headers_ps = []
         for f in sorted(self.schema.fields,
@@ -49,11 +49,10 @@ class EndesaCons(Parser):
     delimiter = ';'
     pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)'
     encoding = "iso-8859-15"
-    schema = EndesaMeasuresSchema()
-    adapter = EndesaMeasuresAdapter()
 
-    def __init__(self):
-        super(EndesaCons, self).__init__()
+    def __init__(self, strict=False):
+        self.schema = EndesaMeasuresSchema(strict=strict)
+        self.adapter = EndesaMeasuresAdapter(strict=strict)
         self.fields = []
         self.headers = []
         for f in sorted(self.schema.fields,

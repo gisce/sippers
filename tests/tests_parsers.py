@@ -18,7 +18,7 @@ class TestParser(SipsTestCaseBase):
         for dso in self.SIPS_DATA:
             sips_file = self.SIPS_DATA[dso]['file']
             lines = []
-            with SipsFile(sips_file) as sf:
+            with SipsFile(sips_file, strict=True) as sf:
                 for line in sf:
                     self.assertIn('ps', line)
                     self.assertIn('measures', line)
@@ -27,7 +27,7 @@ class TestParser(SipsTestCaseBase):
             self.assertEqual(len(lines), 10)
         for dso in self.SIPS_PACKED_DATA:
             sips_file = self.SIPS_PACKED_DATA[dso]['file']
-            with PackedSipsFile(sips_file) as psf:
+            with PackedSipsFile(sips_file, strict=True) as psf:
                 for sf in psf:
                     lines = []
                     for line in sf:

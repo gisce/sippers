@@ -73,12 +73,12 @@ class PackedSipsFile(object):
                 print packed.stats.progress
 
     """
-    def __init__(self, path):
+    def __init__(self, path, strict=False):
         """
         :param path: Packed SIPS file path
         """
         self.path = path
-        self.parser = get_parser(self.path)()
+        self.parser = get_parser(self.path)(strict=strict)
         if not zipfile.is_zipfile(self.path):
             logger.error("File %s is not a zip file", self.path)
             raise zipfile.BadZipfile
@@ -133,10 +133,10 @@ class SipsFile(object):
     :param fd: File descriptor (use this if you have already opened the file)
     :param parser: Force to use a parser
     """
-    def __init__(self, path, fd=None, parser=None):
+    def __init__(self, path, fd=None, parser=None, strict=False):
         self.path = path
         if parser is None:
-            self.parser = get_parser(self.path)()
+            self.parser = get_parser(self.path)(strict=strict)
         else:
             self.parser = parser
         if fd is None:

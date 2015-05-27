@@ -11,12 +11,12 @@ class Iberdrola(Parser):
 
     pattern = 'HGSBKA_(E0021_TXT[A-Z0-9]+\.(zip|ZIP)|TXT[A-Z0-9]+\.TXT)'
     encoding = "iso-8859-15"
-    ps_schema = IberdrolaSipsSchema()
-    ps_adapter = IberdrolaSipsAdapter()
-    measures_schema = IberdrolaMeasuresSchema()
-    measures_adapter = IberdrolaMeasuresAdapter()
 
-    def __init__(self):
+    def __init__(self, strict=False):
+        self.ps_schema = IberdrolaSipsSchema(strict=strict)
+        self.ps_adapter = IberdrolaSipsAdapter(strict=strict)
+        self.measures_schema = IberdrolaMeasuresSchema(strict=strict)
+        self.measures_adapter = IberdrolaMeasuresAdapter(strict=strict)
         self.fields_ps = []
         self.headers_ps = []
         self.slices_ps = []
@@ -65,14 +65,11 @@ class Iberdrola(Parser):
         slinia = map(lambda s: s.strip(), slinia)
         pslist = slinia[0:len(self.fields_ps)]
         # Llista dels valors del tros que agafem dins dels sips
-        try:
-            data = build_dict(self.headers_ps, pslist)
-            result, errors = self.ps_adapter.load(data)
-            if errors:
-                logger.error(errors)
-            return result
-        except Exception, e:
-            logger.error(e)
+        data = build_dict(self.headers_ps, pslist)
+        result, errors = self.ps_adapter.load(data)
+        if errors:
+            logger.error(errors)
+        return result
 
     def parse_measures(self, line):
         measures = []
@@ -97,15 +94,8 @@ class Iberdrola(Parser):
 
     def parse_line(self, line):
         line = unicode(line.decode(self.encoding))
-        parsed = {'ps': {}, 'measures': [], 'orig': line}
-        try:
-            parsed['ps'] = self.parse_ps(line)
-        except Exception as e:
-            logger.error("Row Error %s", e)
-        try:
-            parsed['measures'] = self.parse_measures(line)
-        except Exception as e:
-            logger.error("Row Error consums: %s", e)
+        parsed = {'ps': self.parse_ps(line),
+                  'measures': self.parse_measures(line), 'orig': line}
         return parsed
 
 register(Iberdrola)

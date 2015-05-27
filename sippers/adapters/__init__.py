@@ -5,7 +5,7 @@ from sippers.models import SipsSchema, MeasuresSchema
 class SipsAdapter(Schema):
 
     def make_object(self, data):
-        return SipsSchema().load(data).data
+        return SipsSchema(self.strict).load(data).data
 
 
 class MeasuresAdapter(Schema):
