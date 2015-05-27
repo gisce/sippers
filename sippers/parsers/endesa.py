@@ -42,7 +42,8 @@ class Endesa(Parser):
             result, errors = self.adapter.load(data)
             if errors:
                 logger.error(errors)
-            return result
+            parsed['ps'] = result
+            return parsed
         except Exception as e:
             logger.error("Row Error: %s: %s" % (str(e), line))
 
