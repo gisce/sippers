@@ -1,5 +1,5 @@
-from . import SipsTestCaseBase, get_data
-from sippers.file import SipsFile
+from . import SipsTestCaseBase
+from sippers.file import SipsFile, PackedSipsFile
 
 
 class TestRegisteredClasses(SipsTestCaseBase):
@@ -20,5 +20,19 @@ class TestParser(SipsTestCaseBase):
             lines = []
             with SipsFile(sips_file) as sf:
                 for line in sf:
+                    self.assertIn('ps', line)
+                    self.assertIn('measures', line)
+                    self.assertIn('orig', line)
                     lines.append(line['ps'])
             self.assertEqual(len(lines), 10)
+        for dso in self.SIPS_PACKED_DATA:
+            sips_file = self.SIPS_PACKED_DATA[dso]['file']
+            with PackedSipsFile(sips_file) as psf:
+                for sf in psf:
+                    lines = []
+                    for line in sf:
+                        self.assertIn('ps', line)
+                        self.assertIn('measures', line)
+                        self.assertIn('orig', line)
+                        lines.append(line['ps'])
+                    self.assertEqual(len(lines), 10)
