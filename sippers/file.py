@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import codecs
+from datetime import datetime
 import os
 import zipfile
 
@@ -17,6 +17,7 @@ class SipsFileStats(object):
         """
         self.st_size = size
         self.read = 0
+        self.start = datetime.now()
 
     @property
     def size(self):
@@ -31,6 +32,19 @@ class SipsFileStats(object):
         return '{}%'.format(
             int((float(self.read) / float(self.st_size)) * 100)
         )
+
+    @property
+    def elapsed_time(self):
+        """Elapsed time processing the file.
+        """
+        return '{}'.format(datetime.now() - self.start)
+
+    @property
+    def speed(self):
+        elapsed = (datetime.now() - self.start).seconds
+        if elapsed:
+            return '{}/s'.format(naturalsize(self.read / elapsed))
+        return '--'
 
 
 class PackedSipsFileStats(SipsFileStats):

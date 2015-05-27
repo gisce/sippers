@@ -23,20 +23,22 @@ def import_file(file, backend):
             with PackedSipsFile(file) as psf:
                 for sips_file in psf:
                     print sips_file.path
+                    stats = sips_file.stats
                     for line in sips_file:
                         if not line:
                             continue
                         bnd.insert_ps(line['ps'])
                         bnd.insert_measures(line['measures'])
-                        print sips_file.stats.progress
+                        print stats.progress, stats.elapsed_time, stats.speed
         else:
             with SipsFile(file) as sips_file:
+                stats = sips_file.stats
                 for line in sips_file:
                     if not line:
                         continue
                     bnd.insert_ps(line['ps'])
                     bnd.insert_measures(line['measures'])
-                    print sips_file.stats.progress
+                    print stats.progress, stats.elapsed_time, stats.speed
 
 
 
