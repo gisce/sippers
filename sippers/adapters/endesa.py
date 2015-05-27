@@ -1,3 +1,4 @@
+from sippers import logger
 from sippers.adapters import SipsAdapter, MeasuresAdapter
 from sippers.models import SipsSchema, MeasuresSchema
 from marshmallow import Schema, fields, pre_load
