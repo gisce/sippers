@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from urlparse import urlparse as std_urlparse
 from sippers.backends.base import BaseBackend
 

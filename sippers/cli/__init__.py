@@ -27,8 +27,7 @@ def import_file(file, backend):
                     for line in sips_file:
                         if not line:
                             continue
-                        bnd.insert_ps(line['ps'])
-                        bnd.insert_measures(line['measures'])
+                        bnd.insert(line)
                         print stats.progress, stats.elapsed_time, stats.speed
         else:
             with SipsFile(file) as sips_file:
@@ -36,8 +35,7 @@ def import_file(file, backend):
                 for line in sips_file:
                     if not line:
                         continue
-                    bnd.insert_ps(line['ps'])
-                    bnd.insert_measures(line['measures'])
+                    bnd.insert(line)
                     print stats.progress, stats.elapsed_time, stats.speed
 
 
