@@ -4,6 +4,9 @@ from datetime import datetime
 import os
 import re
 
+from sippers import logger
+from sippers.exceptions import ParserNotFoundException
+
 
 def parse_datetime(value, dataformat):
     # Funcio per l'add_formatter converteixi de string a datetime
@@ -62,7 +65,8 @@ def get_parser(sips_file):
     for path, cls in _PARSERS.items():
         if cls.detect(sips_file):
             return cls
-    return None
+    logger.error("Parser not found for file %s", sips_file)
+    raise ParserNotFoundException()
 
 
 class Parser(object):
