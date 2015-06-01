@@ -19,8 +19,7 @@ class MongoDBBackend(BaseBackend):
             "name", unique=True, background=True
         )
         self.db[self.measures_collection].ensure_index(
-            [("name", pymongo.TEXT), ("data_final", pymongo.DESCENDING)],
-            unique=True, background=True,
+           "name", background=True,
         )
 
     def insert(self, document):
@@ -41,14 +40,13 @@ class MongoDBBackend(BaseBackend):
     def insert_measures(self, values):
         collection = self.measures_collection
         oids = []
-        if not isinstance(values, list):
-            values = [values]
-        for measure in iter(values):
-            oids.append(self.db[collection].update(
-                {"name": measure['name'], "data_final": measure['data_final']},
-                measure,
-                upsert=True
-            ))
+        self.db[collection].remove(
+            {"name": values[0]["name"]}
+        )
+        oids.extend(self.db[collection].insert(
+                {"name": values[0]['name']},
+                values,
+        ))
         return oids
 
     def disconnect(self):
