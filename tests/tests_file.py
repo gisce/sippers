@@ -43,6 +43,7 @@ class SipsFileTest(SipsTestCaseBase):
                 read = sf.stats.read
                 progress = sf.stats.progress
             self.assertEqual(progress, '100%')
+            self.assertEqual(sf.stats.line_number, 10)
             self.assertEqual(naturalsize(read), sf.stats.size)
             sf.close()
 
@@ -53,3 +54,24 @@ class SipsFileTest(SipsTestCaseBase):
             for _ in sf:
                 pass
         self.assertIs(sf.fd.closed, True)
+
+    def test_resume(self):
+        for dso in self.SIPS_DATA:
+            sips_file = self.SIPS_DATA[dso]['file']
+            path = get_data(sips_file)
+            sf = SipsFile(path)
+            with codecs.open(sips_file, encoding=sf.parser.encoding) as orig:
+                orig_content = orig.read()
+            content = ''
+            for idx, line in enumerate(sf):
+                content += line['orig']
+                if idx == 5:
+                    break
+            sf.close()
+            stats = sf.stats
+            sf = SipsFile(path, resume=stats)
+            self.assertEqual(sf.resume_line_number, 6)
+            for line in sf:
+                content += line['orig']
+            sf.close()
+            self.assertEqual(orig_content, content)

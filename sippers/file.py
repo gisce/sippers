@@ -18,6 +18,7 @@ class SipsFileStats(object):
         self.st_size = size
         self.read = 0
         self.start = datetime.now()
+        self.line_number = 0
 
     @property
     def size(self):
@@ -146,9 +147,12 @@ class SipsFile(object):
     :param path: Path of SIPS file
     :param fd: File descriptor (use this if you have already opened the file)
     :param parser: Force to use a parser
+    :param strict: Strict schema validation
+    :param `SipsFileStats` resume: Resume an imported file passing a SipsFileStats
     """
-    def __init__(self, path, fd=None, parser=None, strict=False):
+    def __init__(self, path, fd=None, parser=None, strict=False, resume=None):
         self.path = path
+        self.resume_line_number = 0
         if parser is None:
             self.parser = get_parser(self.path)(strict=strict)
         else:
@@ -158,13 +162,22 @@ class SipsFile(object):
             self.stats = SipsFileStats(os.fstat(self.fd.fileno()).st_size)
         else:
             self.fd = fd
+        if resume:
+            assert isinstance(resume, SipsFileStats)
+            self.stats = resume
+            self.resume_line_number = self.stats.line_number
+            self.stats.line_number = 0
 
     def __iter__(self):
         return self
 
     def next(self):
         for line in self.fd:
+            self.stats.line_number += 1
+            if self.stats.line_number <= self.resume_line_number:
+                continue
             self.stats.read += len(line)
+
             return self.parser.parse_line(line)
         raise StopIteration()
 
