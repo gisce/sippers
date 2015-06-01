@@ -1,7 +1,26 @@
 from sippers import logger
 from sippers.adapters import SipsAdapter, MeasuresAdapter
-from sippers.models import SipsSchema, MeasuresSchema
+from sippers.models import SipsSchema, MeasuresSchema, TARIFFS as BASE_TARIFFS
 from marshmallow import Schema, fields, pre_load
+
+
+TARIFFS = {
+    '20A': '2.0A',
+    '20DHA': '2.0DHA',
+    '20DHS': '2.0DHS',
+    '21A': '2.1A',
+    '21DHA': '2.1DHA',
+    '21DHS': '2.1DHS',
+    '30A': '3.0A',
+    '31A': '3.1A',
+    '61': '6.1',
+    '61A': '6.1A',
+    '61B': '6.1B',
+    '62': '6.2',
+    '63': '6.3',
+    '64': '6.4',
+    '65': '6.5'
+}
 
 
 class EndesaBaseAdapter(Schema):
@@ -37,6 +56,14 @@ class EndesaBaseAdapter(Schema):
         return data
 
 class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
+
+    @pre_load
+    def adapt_tarifa(self, data):
+        tarifa = data.get('tarifa')
+        if tarifa not in BASE_TARIFFS:
+            tarifa = TARIFFS.get(tarifa, tarifa)
+        data['tarifa'] = tarifa
+        return data
 
     @pre_load
     def adapt_indicatiu_icp(self, data):
