@@ -1,10 +1,17 @@
 from sippers.adapters import SipsAdapter, MeasuresAdapter
 from sippers.models import SipsSchema, MeasuresSchema
 from sippers.models.iberdrola import TARIFFS_OCSUM
-from marshmallow import pre_load
+from marshmallow import pre_load, fields
 
 
 class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
+
+    @pre_load
+    def fix_dates(self, data):
+        for attr, field in self.fields.iteritems():
+            if isinstance(field, fields.DateTime):
+                data[attr] += 'T00:00:00'
+        return data
 
     @pre_load
     def adapt_distribuidora(self, data):
@@ -57,4 +64,10 @@ class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
         return data
 
 class IberdrolaMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
-    pass
+
+    @pre_load
+    def fix_dates(self, data):
+        for attr, field in self.fields.iteritems():
+            if isinstance(field, fields.DateTime):
+                data[attr] += 'T00:00:00'
+        return data

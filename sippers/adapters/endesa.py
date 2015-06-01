@@ -28,10 +28,10 @@ class EndesaBaseAdapter(Schema):
     @pre_load
     def fix_dates(self, data):
         for attr, field in self.fields.iteritems():
-            if isinstance(field, fields.Date):
+            if isinstance(field, fields.DateTime):
                 orig = data[attr]
                 if orig not in ('0', '00000000'):
-                    data[attr] = '{}-{}-{}'.format(
+                    data[attr] = '{}-{}-{}T00:00:00'.format(
                         orig[0:4], orig[4:6], orig[6:8]
                     )
                 else:
