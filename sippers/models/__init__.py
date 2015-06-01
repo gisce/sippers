@@ -36,7 +36,7 @@ class SipsSchema(Schema):
     direccio_titular = fields.String()
     pot_max_puesta = fields.Float()
     pot_max_bie = fields.Float()
-    tarifa = fields.Select(choices=TARIFFS),
+    tarifa = fields.Select(choices=TARIFFS)
     des_tarifa = fields.String()
     tensio = fields.String()
     tipo_pm = fields.Select(choices=TYPE_PS)
