@@ -9,7 +9,7 @@ from sippers.adapters.iberdrola import IberdrolaSipsAdapter, IberdrolaMeasuresAd
 
 class Iberdrola(Parser):
 
-    pattern = 'HGSBKA_(E0021_TXT[A-Z0-9]+\.(zip|ZIP)|TXT[A-Z0-9]+\.TXT)'
+    pattern = 'HGSBKA_(E0021_TXT[A-Z0-9]+\.(zip|ZIP)|TXT[A-Z0-9]+\.TXT)$'
     encoding = "iso-8859-15"
 
     def __init__(self, strict=False):

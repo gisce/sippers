@@ -9,7 +9,7 @@ from sippers.parsers.parser import Parser, register
 
 class Endesa(Parser):
 
-    pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)'
+    pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF.SEG0[1-5].(zip|ZIP)$'
     encoding = "iso-8859-15"
     delimiter = ';'
 
@@ -47,7 +47,7 @@ register(Endesa)
 class EndesaCons(Parser):
 
     delimiter = ';'
-    pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)'
+    pattern = '(SEVILLANA|FECSA|ERZ|UNELCO|GESA).INF2.SEG0[1-5].(zip|ZIP)$'
     encoding = "iso-8859-15"
 
     def __init__(self, strict=False):
