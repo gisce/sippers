@@ -23,8 +23,10 @@ class SipsTestCaseBase(TestCase):
     def setUpClass(cls):
         cls.SIPS_DATA = {
             'IBERDROLA': cls.load_sips('HGSBKA_TXT2.TXT'),
+            'HIDROCANTABRICO_PS': cls.load_sips('HIDROCANTABRICO_PS_50290_3-1A.TXT')
         }
         cls.SIPS_PACKED_DATA = {
             'ENDESA_PS': {'file': get_data('ERZ.INF.SEG01.ZIP')},
-            'ENDESA_MEASURES': {'file': get_data('ERZ.INF2.SEG01.ZIP')}
+            'ENDESA_MEASURES': {'file': get_data('ERZ.INF2.SEG01.ZIP')},
+            'HIDROCANTABRICO_PACKED_PS': {'file': get_data('HIDROCANTABRICO_PS.zip')}
         }

@@ -5,8 +5,10 @@ from sippers.file import SipsFile, PackedSipsFile
 
 COMPANY_PARSERS = {
     "IBERDROLA": "sippers.parsers.iberdrola.Iberdrola",
+    "HIDROCANTABRICO_PS": "sippers.parsers.hidrocantabrico.Hidrocantabrico",
     "ENDESA_PS": "sippers.parsers.endesa.Endesa",
-    "ENDESA_MEASURES": "sippers.parsers.endesa.EndesaCons"
+    "ENDESA_MEASURES": "sippers.parsers.endesa.EndesaCons",
+    "HIDROCANTABRICO_PACKED_PS": "sippers.parsers.hidrocantabrico.Hidrocantabrico"
 }
 
 
