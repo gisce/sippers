@@ -7,7 +7,7 @@ class HidrocantabricoSchema(Schema):
     name = fields.String(description="CUPS", position=1, length=22)
     distri = fields.String(description="Empresa distribuidora", position=2, length=54)
     poblacio = fields.String(description="Ubicación PS", position=3, length=81)
-    codi_postal = fields.String(description="Población_Codigo PS", position=4, length=14)
+    codi_postal = fields.String(description="Población_Codigo PS", position=4, length=13)
     provincia = fields.String(description="Provincia", position=5, length=2)
     data_alta = fields.String(description="Fecha de alta", position=6, length=8)
     tarifa = fields.String(description="Tarifa en vigor", position=7, length=5)
