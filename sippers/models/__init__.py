@@ -41,7 +41,7 @@ class SipsSchema(Schema):
     des_tarifa = fields.String()
     tensio = fields.String()
     tipo_pm = fields.Select(choices=TYPE_PS)
-    indicatiu_icp = fields.Select(choices=['0', '1'])
+    indicatiu_icp = fields.Select(choices=['0', '1'], allow_none=True)
     perfil_consum = fields.Select(choices=CONSUMPTION_PROFILE, allow_none=True)
     der_extensio = fields.Float()
     der_acces_llano = fields.Float()
