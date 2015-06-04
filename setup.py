@@ -14,6 +14,9 @@ setup(
         [console_scripts]
         sippers=sippers.cli:sippers
     ''',
+    package_data={
+        'sippers': ['data/*']
+    },
     install_requires=[
         "raven",
         "pymongo<3.0",
