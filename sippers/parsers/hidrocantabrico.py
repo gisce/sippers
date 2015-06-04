@@ -40,7 +40,6 @@ class Hidrocantabrico(Parser):
         pslist = slinia[0:len(self.fields_ps)]
         # Llista dels valors del tros que agafem dins dels sips
         data = build_dict(self.headers_ps, pslist)
-        print data['data_alta'], data['provincia'], data['tarifa']
         result, errors = self.ps_adapter.load(data)
         if errors:
             logger.error(errors)
