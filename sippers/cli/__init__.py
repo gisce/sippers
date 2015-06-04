@@ -21,6 +21,7 @@ def import_file(file, backend):
         if zipfile.is_zipfile(file):
             click.echo("Using packed SIPS File for {}".format(file))
             with PackedSipsFile(file) as psf:
+                pstats = psf.stats
                 for sips_file in psf:
                     print sips_file.path
                     stats = sips_file.stats
@@ -28,7 +29,7 @@ def import_file(file, backend):
                         if not line:
                             continue
                         bnd.insert(line)
-                        print stats.progress, stats.elapsed_time, stats.speed
+                        print pstats.progress, stats.progress, stats.elapsed_time, stats.speed
         else:
             with SipsFile(file) as sips_file:
                 stats = sips_file.stats
