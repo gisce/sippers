@@ -33,11 +33,10 @@ class MongoDBBackend(BaseBackend):
             for measure in measures:
                 measure.backend = self
                 post_measures.append(measure.backend_data)
-
             self.insert_measures(post_measures)
 
-    def get(self, collection, filters, fields):
-        return self.db[collection].find(filters, fields=fields)
+    def get(self, collection, filters, fields=None):
+        return [x for x in self.db[collection].find(filters, fields=fields)]
 
     def insert_ps(self, ps):
         collection = self.ps_collection
@@ -52,10 +51,7 @@ class MongoDBBackend(BaseBackend):
         self.db[collection].remove(
             {"name": values[0]["name"]}
         )
-        oids.extend(self.db[collection].insert(
-                {"name": values[0]['name']},
-                values,
-        ))
+        oids.extend(self.db[collection].insert(values))
         return oids
 
     def disconnect(self):

@@ -1,7 +1,7 @@
 import json
 
 from sippers import get_data
-from sippers.adapters import SipsAdapter, MeasuresAdapter
+from sippers.adapters import SipsAdapter, MeasuresAdapter, pre_insert
 from sippers.models import Document, SipsSchema, MeasuresSchema
 from sippers.models.iberdrola import TARIFFS_OCSUM
 from marshmallow import pre_load, fields
@@ -100,4 +100,14 @@ class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
                     )
                 else:
                     data[attr] = None
+        return data
+
+    @pre_insert
+    def fix_name(self, data):
+        backend = self.backend
+        result = backend.get(self.backend.ps_collection, {
+            'ref': data['name'], 'cod_distri': '0026'}
+        )
+        if result:
+            data['name'] = result[0]['name']
         return data
