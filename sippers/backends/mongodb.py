@@ -25,10 +25,19 @@ class MongoDBBackend(BaseBackend):
     def insert(self, document):
         ps = document.get('ps')
         if ps:
-            self.insert_ps(ps)
+            ps.backend = self
+            self.insert_ps(ps.backend_data)
         measures = document.get('measures')
+        post_measures = []
         if measures:
-            self.insert_measures(measures)
+            for measure in measures:
+                measure.backend = self
+                post_measures.append(measure.backend_data)
+
+            self.insert_measures(post_measures)
+
+    def get(self, collection, filters, fields):
+        return self.db[collection].find(filters, fields=fields)
 
     def insert_ps(self, ps):
         collection = self.ps_collection

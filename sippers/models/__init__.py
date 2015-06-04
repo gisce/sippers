@@ -23,6 +23,22 @@ TYPE_PS = ['01', '02', '03', '04', '05']
 CONSUMPTION_PROFILE = ['Pa', 'Pb', 'Pc', 'Pd']
 
 
+class Document(object):
+    def __init__(self, data, adapter):
+        self.data = data
+        self.adapter = adapter
+        self.backend = None
+
+    @property
+    def backend_data(self):
+        if not self.backend:
+            raise Exception("No backend defined")
+        self.adapter.backend = self.backend
+        return self.adapter._invoke_processors(
+            'pre_insert', False, self.data, False
+        )
+
+
 class SipsSchema(Schema):
     name = fields.String(required=True)
     distri = fields.String()

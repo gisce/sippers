@@ -43,7 +43,7 @@ class Hidrocantabrico(Parser):
         result, errors = self.ps_adapter.load(data)
         if errors:
             logger.error(errors)
-        parsed = {'ps': data,
+        parsed = {'ps': result,
                   'measures': [], 'orig': line}
         return parsed
 
