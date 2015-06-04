@@ -77,9 +77,6 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
         return data
 
 
-
-
-
 class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
 
     @pre_load

@@ -41,6 +41,7 @@ class Document(object):
 
 class SipsSchema(Schema):
     name = fields.String(required=True)
+    ref = fields.String()
     distri = fields.String()
     cod_distri = fields.String()
     poblacio = fields.String()
