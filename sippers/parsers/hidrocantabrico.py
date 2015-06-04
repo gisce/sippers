@@ -3,8 +3,8 @@ from __future__ import absolute_import
 from sippers import logger
 from sippers.utils import build_dict
 from sippers.parsers.parser import Parser, register
-from sippers.models.hidrocantabrico import HidrocantabricoSchema
-from sippers.adapters.hidrocantabrico import HidrocantabricoSipsAdapter
+from sippers.models.hidrocantabrico import HidrocantabricoSchema, HidrocantabricoMeasuresSchema
+from sippers.adapters.hidrocantabrico import HidrocantabricoSipsAdapter, HidrocantabricoMeasuresAdapter
 
 
 class Hidrocantabrico(Parser):
@@ -49,3 +49,48 @@ class Hidrocantabrico(Parser):
 
 
 register(Hidrocantabrico)
+
+
+class HidrocantabricoMeasures(Parser):
+    pattern = 'HIDROCANTABRICO_CO.*\.(zip|TXT)$'
+    encoding = "iso-8859-15"
+
+    def __init__(self, strict=False):
+        self.schema = HidrocantabricoMeasuresSchema(strict=strict)
+        self.adapter = HidrocantabricoMeasuresAdapter(strict=strict)
+        self.measures_adapter = self.adapter
+        self.fields = []
+        self.headers = []
+        self.measures_slices = []
+        for f in sorted(self.schema.fields,
+                key=lambda f: self.schema.fields[f].metadata['position']):
+            field = self.schema.fields[f]
+            self.fields.append((f, field.metadata))
+            self.headers.append(f)
+            self.measures_slices.append(field.metadata['length'])
+
+    def slices(self, line, vals):
+        # La llista amb les mides dels camps entren per els args.
+        position = 0
+        lvals = []
+        for length in vals:
+            lvals.append(line[position:position + length])
+            position += length
+        return lvals
+
+    def parse_line(self, line):
+        line = unicode(line.decode(self.encoding))
+        slinia = tuple(self.slices(line, self.measures_slices))
+        slinia = map(lambda s: s.strip(), slinia)
+        values = slinia[0:len(self.fields)]
+        # Llista dels valors del tros que agafem dins dels sips
+        data = build_dict(self.headers, values)
+        result, errors = self.adapter.load(data)
+        if errors:
+            logger.error(errors)
+        parsed = {'ps': {},
+                  'measures': [result], 'orig': line}
+        return parsed
+
+
+register(HidrocantabricoMeasures)

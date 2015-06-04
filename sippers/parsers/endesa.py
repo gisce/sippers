@@ -53,6 +53,7 @@ class EndesaCons(Parser):
     def __init__(self, strict=False):
         self.schema = EndesaMeasuresSchema(strict=strict)
         self.adapter = EndesaMeasuresAdapter(strict=strict)
+        self.measures_adapter = self.adapter
         self.fields = []
         self.headers = []
         for f in sorted(self.schema.fields,

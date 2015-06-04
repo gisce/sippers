@@ -13,3 +13,9 @@ class BaseBackend(object):
 
     def insert(self, document):
         raise NotImplementedError()
+
+    def get(self, collection, filters, fields=None):
+        raise NotImplementedError()
+
+    def disconnect(self):
+        raise NotImplementedError()

@@ -2,7 +2,7 @@ import json
 
 from sippers import get_data
 from sippers.adapters import SipsAdapter, MeasuresAdapter
-from sippers.models import SipsSchema, MeasuresSchema
+from sippers.models import Document, SipsSchema, MeasuresSchema
 from sippers.models.iberdrola import TARIFFS_OCSUM
 from marshmallow import pre_load, fields
 
@@ -74,4 +74,33 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
         mapping = {'F': '0', 'J': '1'}
         fj = data['persona_fj']
         data['persona_fj'] = mapping.get(fj)
+        return data
+
+
+
+
+
+class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
+
+    @pre_load
+    def fix_numbers(self, data):
+        for attr, field in self.fields.iteritems():
+            if isinstance(field, fields.Integer):
+                if not data[attr]:
+                    data[attr] = 0
+                else:
+                    data[attr] = float(data[attr].replace(',', '.'))
+        return data
+
+    @pre_load
+    def fix_dates(self, data):
+        for attr, field in self.fields.iteritems():
+            if isinstance(field, fields.DateTime):
+                orig = data[attr]
+                if orig not in ('', '0', '00000000'):
+                    data[attr] = '{}-{}-{}T00:00:00'.format(
+                        orig[0:4], orig[4:6], orig[6:8]
+                    )
+                else:
+                    data[attr] = None
         return data

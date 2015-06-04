@@ -10,7 +10,8 @@ class TestRegisteredClasses(SipsTestCaseBase):
             'sippers.parsers.iberdrola.Iberdrola',
             'sippers.parsers.endesa.Endesa',
             'sippers.parsers.endesa.EndesaCons',
-            'sippers.parsers.hidrocantabrico.Hidrocantabrico'
+            'sippers.parsers.hidrocantabrico.Hidrocantabrico',
+            'sippers.parsers.hidrocantabrico.HidrocantabricoMeasures'
         ])
 
 
