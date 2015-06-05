@@ -69,7 +69,7 @@ class Iberdrola(Parser):
         result, errors = self.ps_adapter.load(data)
         if errors:
             logger.error(errors)
-        return result
+        return result, errors
 
     def parse_measures(self, line):
         measures = []
@@ -79,6 +79,7 @@ class Iberdrola(Parser):
         length_c = self.slices_measures
         i, j = self.get_pos('name')
         cups = line[i:j]
+        all_errors = {}
         while c_line:
             m = tuple(self.slices(c_line, length_c))
             m = map(lambda s: s.strip(), m)
@@ -87,15 +88,23 @@ class Iberdrola(Parser):
             result, errors = self.measures_adapter.load(consums)
             if errors:
                 logger.error(errors)
+                all_errors.update(errors)
             measures.append(result)
             start += step
             c_line = line[start:start + step].strip()
-        return measures
+        return measures, all_errors
 
     def parse_line(self, line):
         line = unicode(line.decode(self.encoding))
-        parsed = {'ps': self.parse_ps(line),
-                  'measures': self.parse_measures(line), 'orig': line}
-        return parsed
+        all_errors = {}
+        ps, ps_errors = self.parse_ps(line)
+        measures, measures_errors = self.parse_measures(line)
+        parsed = {'ps': ps,
+                  'measures': measures, 'orig': line}
+        if ps_errors:
+            all_errors.update(ps_errors)
+        if measures_errors:
+            all_errors.update(measures_errors)
+        return parsed, all_errors
 
 register(Iberdrola)

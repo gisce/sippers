@@ -45,7 +45,7 @@ class Hidrocantabrico(Parser):
             logger.error(errors)
         parsed = {'ps': result,
                   'measures': [], 'orig': line}
-        return parsed
+        return parsed, errors
 
 
 register(Hidrocantabrico)
@@ -90,7 +90,7 @@ class HidrocantabricoMeasures(Parser):
             logger.error(errors)
         parsed = {'ps': {},
                   'measures': [result], 'orig': line}
-        return parsed
+        return parsed, errors
 
 
 register(HidrocantabricoMeasures)

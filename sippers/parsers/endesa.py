@@ -30,15 +30,12 @@ class Endesa(Parser):
         slinia = tuple(unicode(line.decode(self.encoding)).split(self.delimiter))
         slinia = map(lambda s: s.strip(), slinia)
         parsed = {'ps': {}, 'measures': {}, 'orig': line}
-        try:
-            data = build_dict(self.headers_ps, slinia)
-            result, errors = self.adapter.load(data)
-            if errors:
-                logger.error(errors)
-            parsed['ps'] = result
-            return parsed
-        except Exception as e:
-            logger.error("Row Error: %s: %s" % (str(e), line))
+        data = build_dict(self.headers_ps, slinia)
+        result, errors = self.adapter.load(data)
+        if errors:
+            logger.error(errors)
+        parsed['ps'] = result
+        return parsed, errors
 
 
 register(Endesa)
@@ -71,16 +68,18 @@ class EndesaCons(Parser):
         step = self.measures_step
         parsed = {'ps': {}, 'measures': [], 'orig': line}
         c_line = slinia[start:start+step]
+        all_errors = {}
         while c_line:
             c_line.insert(0, slinia[0])
             consums = build_dict(self.headers, c_line)
             result, errors = self.adapter.load(consums)
             if errors:
                 logger.error(errors)
+                all_errors.update(errors)
             parsed['measures'].append(result)
             start += step
             c_line = slinia[start:start+step]
-        return parsed
+        return parsed, errors
 
 
 register(EndesaCons)

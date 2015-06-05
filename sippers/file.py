@@ -19,6 +19,7 @@ class SipsFileStats(object):
         self.read = 0
         self.start = datetime.now()
         self.line_number = 0
+        self.errors = []
 
     @property
     def size(self):
@@ -42,10 +43,18 @@ class SipsFileStats(object):
 
     @property
     def speed(self):
-        elapsed = (datetime.now() - self.start).seconds
+        elapsed = (datetime.now() - self.start).total_seconds()
         if elapsed:
             return '{}/s'.format(naturalsize(self.read / elapsed))
         return '--'
+
+    @property
+    def number_of_errors(self):
+        return len(self.errors)
+
+    @property
+    def rate_error(self):
+        return (self.number_of_errors * 1.0 / self.line_number) * 100
 
 
 class PackedSipsFileStats(SipsFileStats):
@@ -177,8 +186,12 @@ class SipsFile(object):
             if self.stats.line_number <= self.resume_line_number:
                 continue
             self.stats.read += len(line)
-
-            return self.parser.parse_line(line)
+            data, errors = self.parser.parse_line(line)
+            if errors:
+                self.stats.errors.append(
+                    (self.stats.line_number, errors)
+                )
+            return data
         raise StopIteration()
 
     def __enter__(self):
