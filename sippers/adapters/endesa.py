@@ -29,7 +29,7 @@ class EndesaBaseAdapter(Schema):
     def fix_dates(self, data):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.DateTime):
-                orig = data[attr]
+                orig = data.get(attr)
                 if orig not in ('0', '00000000'):
                     data[attr] = '{}-{}-{}T00:00:00'.format(
                         orig[0:4], orig[4:6], orig[6:8]
@@ -42,7 +42,7 @@ class EndesaBaseAdapter(Schema):
     def fix_numbers(self, data):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.Integer):
-                if not data[attr]:
+                if not data.get(attr):
                     data[attr] = 0
         return data
 
@@ -50,7 +50,7 @@ class EndesaBaseAdapter(Schema):
     def fix_floats(self, data):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.Float):
-                if not data[attr]:
+                if not data.get(attr):
                     data[attr] = 0
                 data[attr] = data[attr].replace(',', '.')
         return data

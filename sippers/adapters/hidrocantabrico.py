@@ -55,7 +55,7 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
     @pre_load
     def fix_primera_vivenda(self, data):
         mapping = {'N': '0', 'S': '1'}
-        pv = data['primera_vivenda']
+        pv = data.get('primera_vivenda')
         data['primera_vivenda'] = mapping.get(pv)
         return data
 
@@ -63,7 +63,7 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
     def fix_dates(self, data):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.DateTime):
-                orig = data[attr]
+                orig = data.get(attr)
                 if orig not in ('', '0', '00000000'):
                     data[attr] = '{}-{}-{}T00:00:00'.format(
                         orig[0:4], orig[4:6], orig[6:8]
@@ -74,7 +74,7 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def fix_perfil_consum(self, data):
-        pc = data['perfil_consum']
+        pc = data.get('perfil_consum')
         if pc:
             data['perfil_consum'] = 'P' + pc.lower()
         else:
@@ -83,7 +83,7 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def fix_indicatiu_icp(self, data):
-        icp = data['indicatiu_icp']
+        icp = data.get('indicatiu_icp')
         mapping = {'S': '1', 'N': '0'}
         data['indicatiu_icp'] = mapping.get(icp)
         return data
@@ -91,14 +91,14 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
     @pre_load
     def fix_propietat_equip_mesura(self, data):
         mapping = {'D': '0', 'T': '1'}
-        propietat = data['propietat_equip_mesura']
+        propietat = data.get('propietat_equip_mesura')
         data['propietat_equip_mesura'] = mapping.get(propietat)
         return data
 
     @pre_load
     def fix_persona_fj(self, data):
         mapping = {'F': '0', 'J': '1'}
-        fj = data['persona_fj']
+        fj = data.get('persona_fj')
         data['persona_fj'] = mapping.get(fj)
         return data
 
@@ -109,17 +109,17 @@ class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
     def fix_numbers(self, data):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.Integer):
-                if not data[attr]:
+                if not data.get(attr):
                     data[attr] = 0
                 else:
-                    data[attr] = float(data[attr].replace(',', '.'))
+                    data[attr] = float(data.get(attr).replace(',', '.'))
         return data
 
     @pre_load
     def fix_dates(self, data):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.DateTime):
-                orig = data[attr]
+                orig = data.get(attr)
                 if orig not in ('', '0', '00000000'):
                     data[attr] = '{}-{}-{}T00:00:00'.format(
                         orig[0:4], orig[4:6], orig[6:8]

@@ -20,18 +20,18 @@ class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
         return data
 
     @pre_load
-    def adapt_floats(self, data):
-        data['pot_max_bie'] = data['pot_max_bie'].replace(',', '.')
-        data['pot_max_puesta'] = data['pot_max_puesta'].replace(',', '.')
-        data['der_extensio'] = data['der_extensio'].replace(',', '.')
-        for x in range(1, 11):
-            k = 'pot_cont_p%s' % x
-            data[k] = data[k].replace(',', '.')
+    def fix_floats(self, data):
+        for attr, field in self.fields.iteritems():
+            if isinstance(field, fields.Float):
+                if not data.get(attr):
+                    data[attr] = 0
+                if isinstance(data[attr], basestring):
+                    data[attr] = data[attr].replace(',', '.')
         return data
 
     @pre_load
     def adapt_indicatiu_icp(self, data):
-        if data['indicatiu_icp'] == '2':
+        if data.get('indicatiu_icp') == '2':
             data['indicatiu_icp'] = '1'
         return data
 
@@ -52,13 +52,18 @@ class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def adapt_tensio(self, data):
-        data['tensio'] = str(int(data['tensio']))
+        tensio = data.get('tensio')
+        try:
+            tensio = int(tensio)
+        except ValueError:
+            pass
+        data['tensio'] = str(tensio)
         return data
 
     @pre_load
     def adapt_primera_vivenda(self, data):
         pv_map = {u'N': '0', u'S': '1'}
-        pv = data['primera_vivenda']
+        pv = data.get('primera_vivenda')
         if pv and pv in pv_map:
             data['primera_vivenda'] = pv_map[pv]
         return data
