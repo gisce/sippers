@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import os
 
 from osconf import config_from_environment
 
@@ -14,3 +15,10 @@ from sippers.logging import setup_logging
 logging_config = config_from_environment('SIPPERS_LOGGING')
 
 logger = setup_logging(**logging_config)
+
+
+_ROOT = os.path.abspath(os.path.dirname(__file__))
+
+
+def get_data(path):
+    return os.path.join(_ROOT, 'data', path)

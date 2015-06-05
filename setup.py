@@ -10,15 +10,19 @@ setup(
     author='GISCE-TI, S.L.',
     author_email='devel@gisce.net',
     description='',
-    entry_points="""
+    entry_points='''
         [console_scripts]
-        sippers=sippers.sippers:main
-    """,
+        sippers=sippers.cli:sippers
+    ''',
+    package_data={
+        'sippers': ['data/*']
+    },
     install_requires=[
         "raven",
         "pymongo<3.0",
-        "tablib",
-        "osconf"
+        "osconf",
+        "marshmallow>=2.0.0b2",
+        "click"
     ],
     test_suite='tests',
 )
