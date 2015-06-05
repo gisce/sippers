@@ -186,12 +186,23 @@ class SipsFile(object):
             if self.stats.line_number <= self.resume_line_number:
                 continue
             self.stats.read += len(line)
-            data, errors = self.parser.parse_line(line)
-            if errors:
-                self.stats.errors.append(
-                    (self.stats.line_number, errors)
+            try:
+                data, errors = self.parser.parse_line(line)
+                if errors:
+                    self.stats.errors.append(
+                        (self.stats.line_number, errors)
+                    )
+                return data
+            except Exception as exc:
+                logger.critical(
+                    "Error in %s L:%s: %s %s", self.path, self.stats.line_number,
+                    str(exc), data.get('orig'), exc_info=True
                 )
-            return data
+                self.stats.errors.append(
+                    (self.stats.line_number, str(exc))
+                )
+                if self.parser.adapter.strict:
+                    raise
         raise StopIteration()
 
     def __enter__(self):
