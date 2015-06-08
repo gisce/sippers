@@ -78,7 +78,7 @@ class Iberdrola(Parser):
         c_line = line[start:start+step].strip()
         length_c = self.slices_measures
         i, j = self.get_pos('name')
-        cups = line[i:j]
+        cups = line[i:j].strip()
         all_errors = {}
         while c_line:
             m = tuple(self.slices(c_line, length_c))
