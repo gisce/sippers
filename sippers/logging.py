@@ -4,6 +4,11 @@
     ~~~~~~~~~~~~~~~
 
     Implements the logging support for SIPPERS
+
+    You can use logging everywhere using::
+
+        from sippers import logger
+        logger.info('Info message')
 """
 from __future__ import absolute_import
 
@@ -19,7 +24,9 @@ LOG_FORMAT = '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
 def setup_logging(level=None, logfile=None):
     """
     Setups sippers logging system.
+
     It will setup sentry logging if SENTRY_DSN environment is defined
+
     :param level: logging.LEVEL to set to logger (defaults INFO)
     :param logfile: File to write the log
     :return: logger

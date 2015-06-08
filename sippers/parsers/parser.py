@@ -70,6 +70,8 @@ def get_parser(sips_file):
 
 
 class Parser(object):
+    """Base parser interface.
+    """
 
     encoding = "iso-8859-15"
 
@@ -80,6 +82,10 @@ class Parser(object):
         return False
 
     def parse_line(self, line):
+        """Parse a line of a SIPS file.
+
+        :param line: line of the file
+        """
         raise NotImplementedError("Should have implemented this")
 
 

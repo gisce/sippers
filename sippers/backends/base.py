@@ -2,6 +2,10 @@ from __future__ import absolute_import
 
 
 class BaseBackend(object):
+    """Base backend interface
+
+    :param uri: URI to get the properties for the backend.
+    """
     def __init__(self, uri):
         pass
 

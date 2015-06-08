@@ -21,12 +21,21 @@ TARIFFS = {
     '64': '6.4',
     '65': '6.5'
 }
+"""Mapping of ENDESA tariffs codes."""
 
 
 class EndesaBaseAdapter(Schema):
+    """Endesa SIPS Adapter
+    """
 
     @pre_load
     def fix_dates(self, data):
+        """Fix the dates in the SIPS file from ENDESA.
+
+        In the endesa sips file dates are ``YYYYMMDD`` or ``0`` or ``00000000``.
+        With this all ``fields.DateTime`` fields are caugth and parsed to a
+        correct format ``YYYY-MM-DDT00:00:00``.
+        """
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.DateTime):
                 orig = data.get(attr)
@@ -48,6 +57,10 @@ class EndesaBaseAdapter(Schema):
 
     @pre_load
     def fix_floats(self, data):
+        """Fix floats numbers.
+
+        Replace ``,`` to ``.``
+        """
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.Float):
                 if not data.get(attr):
@@ -57,9 +70,15 @@ class EndesaBaseAdapter(Schema):
         return data
 
 class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
+    """Endesa SIPS Adapter.
+    """
 
     @pre_load
     def adapt_tarifa(self, data):
+        """Fix the ATR Tariff code
+
+        Using :attr:`TARIFFS`
+        """
         tarifa = data.get('tarifa')
         if tarifa not in BASE_TARIFFS:
             tarifa = TARIFFS.get(tarifa, tarifa)

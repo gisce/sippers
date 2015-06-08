@@ -9,8 +9,19 @@ _AVAILABLE_BACKENDS = {}
 def register(name, cls):
     """Register a backend
 
-    :type name: Backend name
-    :type cls: Backend class
+    Use this function to register a Backend class for and schema. If you want
+    to register your own backend you can do::
+
+        class YourAwesomeBackend(BaseBackend):
+            pass
+
+        register('awesome', YourAwsomeBackend)
+
+    Then with the URL ``awesome://user:pass@host/db`` with the function
+    :func:`get_backend`
+
+    :param name: Backend name
+    :param class cls: Backend class
     """
     _AVAILABLE_BACKENDS[name] = cls
 
@@ -29,6 +40,10 @@ def urlparse(url):
 
 
 def get_backend(url):
+    """Get the backend class by and URL.
+
+    :param url: URL for identify a backend.
+    """
     config = urlparse(url)
     backend = config['backend']
     if backend not in _AVAILABLE_BACKENDS:
