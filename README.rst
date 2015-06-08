@@ -10,15 +10,16 @@ Import and parse CNMC SIPS
 Installation
 ------------
 
-::
+.. code-block:: shell
 
     $ pip install sippers
 
 Use
 ---
 
-::
+.. code-block:: shell
 
-    $ sippers import --file /path/to/sips_file.zip --backend mongodb://user:pass@localhost:27017/db
-    
+    $ sippers import --file /path/to/sips_file.zip \
+      --backend mongodb://user:pass@localhost:27017/db
+
 At this moment only **MongoDB** as a backend is supported, but you can write your own backend.
