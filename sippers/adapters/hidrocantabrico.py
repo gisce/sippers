@@ -108,7 +108,7 @@ class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
     @pre_load
     def fix_numbers(self, data):
         for attr, field in self.fields.iteritems():
-            if isinstance(field, fields.Integer):
+            if isinstance(field, (fields.Integer, fields.Float)):
                 if not data.get(attr):
                     data[attr] = 0
                 else:
