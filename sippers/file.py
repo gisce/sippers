@@ -196,7 +196,7 @@ class SipsFile(object):
             except Exception as exc:
                 logger.critical(
                     "Error in %s L:%s: %s %s", self.path, self.stats.line_number,
-                    str(exc), data.get('orig'), exc_info=True
+                    str(exc), line, exc_info=True
                 )
                 self.stats.errors.append(
                     (self.stats.line_number, str(exc))
