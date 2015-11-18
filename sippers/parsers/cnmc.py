@@ -68,7 +68,7 @@ class Cnmc(Parser):
         reader = csv.DictReader(l, fieldnames=self.headers_ps, delimiter=',')
         linia = reader.next() # nomes n'hi ha una
 
-        parsed = {'ps': {}, 'measures': {}, 'orig': line}
+        parsed = {'ps': {}, 'orig': line}
         result, errors = self.adapter.load(linia)
 
         if errors:
@@ -101,14 +101,14 @@ class CnmcCons(Parser):
     def parse_line(self, line):
         slinia = tuple(line.split(self.delimiter))
         slinia = map(lambda s: s.strip(), slinia)
-        parsed = {'ps': {}, 'measures': [], 'orig': line}
+        parsed = {'ps': {}, 'measure_cnmc': [], 'orig': line}
         all_errors = {}
         consums = build_dict(self.headers, slinia)
         result, errors = self.adapter.load(consums)
         if errors:
             logger.error(errors)
             all_errors.update(errors)
-        parsed['measures'].append(result)
+        parsed['measure_cnmc'] = result
 
         return parsed, errors
 
