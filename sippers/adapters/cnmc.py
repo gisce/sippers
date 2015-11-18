@@ -7,6 +7,12 @@ class CnmcSipsAdapter(SipsAdapter, SipsSchema):
     '''A self.fields tenim els camps per defecte, els de SipsSchema base'''
 
     @pre_load
+    def adapt_nom_cognoms(self, data):
+        nom_complet = data.get('nom_complet')
+        data['cognom'] = nom_complet
+        return data
+
+    @pre_load
     def add_distri_description(self, data):
         cod_distri = data.get('cod_distri')
         if cod_distri == '059':
