@@ -1,4 +1,5 @@
 from marshmallow import Schema, fields
+from marshmallow.validate import OneOf
 
 TARIFFS = [
     '2.0A',
@@ -66,17 +67,19 @@ class SipsSchema(Schema):
     direccio_titular = fields.String()
     pot_max_puesta = fields.Float()
     pot_max_bie = fields.Float()
-    tarifa = fields.Select(choices=TARIFFS)
+    tarifa = fields.String(validate=OneOf(TARIFFS))
     des_tarifa = fields.String()
     tensio = fields.String()
-    tipo_pm = fields.Select(choices=TYPE_PS)
-    indicatiu_icp = fields.Select(choices=['0', '1'], allow_none=True)
-    perfil_consum = fields.Select(choices=CONSUMPTION_PROFILE, allow_none=True)
+    tipo_pm = fields.String(validate=OneOf(TYPE_PS))
+    indicatiu_icp = fields.String(validate=OneOf(['0', '1']), allow_none=True)
+    perfil_consum = fields.String(
+        validate=OneOf(CONSUMPTION_PROFILE), allow_none=True
+    )
     der_extensio = fields.Float()
     der_acces_llano = fields.Float()
     der_acces_valle = fields.Float()
-    propietat_equip_mesura = fields.Select(choices=['0', '1'])
-    propietat_icp = fields.Select(choices=['0', '1']),
+    propietat_equip_mesura = fields.String(validate=OneOf(['0', '1']))
+    propietat_icp = fields.String(validate=OneOf(['0', '1'])),
     pot_cont_p1 = fields.Float()
     pot_cont_p2 = fields.Float()
     pot_cont_p3 = fields.Float()
@@ -86,8 +89,8 @@ class SipsSchema(Schema):
     data_ulti_mov = fields.DateTime(allow_none=True)
     data_ult_canv = fields.DateTime(allow_none=True)
     data_lim_exten = fields.DateTime(allow_none=True)
-    persona_fj = fields.Select(choices=['0', '1'], allow_none=True)
-    primera_vivenda = fields.Select(choices=['0', '1'], allow_none=True)
+    persona_fj = fields.String(validate=OneOf(['0', '1']), allow_none=True)
+    primera_vivenda = fields.String(validate=OneOf(['0', '1']), allow_none=True)
     fianza = fields.Float()
 
 
