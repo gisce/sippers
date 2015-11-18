@@ -1,4 +1,4 @@
-from marshmallow import Schema
+from marshmallow import Schema, post_load
 from marshmallow.decorators import tag_processor
 from sippers.models import Document
 
@@ -29,12 +29,15 @@ class SipsAdapter(Schema):
     """Base SIPS Adapter.
     """
 
-    def make_object(self, data):
+    @post_load
+    def make_document(self, data):
         return Document(data, adapter=self)
 
 
 class MeasuresAdapter(Schema):
     """Base Measures Adapter.
     """
-    def make_object(self, data):
+
+    @post_load
+    def make_document(self, data):
         return Document(data, adapter=self)
