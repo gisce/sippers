@@ -1,4 +1,6 @@
 from marshmallow import Schema, fields
+from marshmallow.validate import OneOf
+
 from sippers.models import TYPE_PS, CONSUMPTION_PROFILE
 
 
@@ -25,20 +27,26 @@ class IberdrolaSipsSchema(Schema):
     poblacio = fields.String(position=2, length=45)
     codi_postal = fields.String(position=3, length=10)
     provincia = fields.String(position=4, length=45)
-    persona_fj = fields.Select(choices=('PF', 'PJ'), position=5, length=2)
+    persona_fj = fields.String(
+        validate=OneOf(['PF', 'PJ']), position=5, length=2
+    )
     cognom = fields.String(position=6, length=50)
     direccio_titular = fields.String(position=7, length=80)
     municipi_titular = fields.String(position=8, length=45)
     codi_postal_titular = fields.String(position=9, length=10)
     provincia_titular = fields.String(position=10, length=45)
     data_alta = fields.Date(position=11, length=10)
-    tarifa = fields.Select(choices=TARIFFS_OCSUM.keys(), position=12, length=3)
+    tarifa = fields.String(
+        validate=OneOf(TARIFFS_OCSUM.keys()), position=12, length=3
+    )
     tensio = fields.Integer(position=13, length=9)
     pot_max_bie = fields.Float(position=14, length=12)
     pot_max_puesta = fields.Float(position=15, length=12)
-    tipo_pm = fields.Select(choices=TYPE_PS, position=16, length=2)
+    tipo_pm = fields.String(validate=OneOf(TYPE_PS), position=16, length=2)
     indicatiu_icp = fields.String(position=17, length=1)
-    perfil_consum = fields.Select(choices=CONSUMPTION_PROFILE, position=18, length=2)
+    perfil_consum = fields.String(
+        validate=OneOf(CONSUMPTION_PROFILE), position=18, length=2
+    )
     der_acces_reconocido = fields.Float(position=19, length=12)
     der_extensio = fields.Float(position=20, length=12)
     propietat_equip_mesura = fields.String(position=21, length=1)
@@ -59,9 +67,13 @@ class IberdrolaSipsSchema(Schema):
     data_ult_lect = fields.Date(position=36, length=10)
     pot_disp_caixa = fields.Float(position=37, length=12)
     impago = fields.String(position=38, length=11)
-    diposit_garantia = fields.Select(choices=('1', '2'), position=39, length=1)
+    diposit_garantia = fields.String(
+        validate=OneOf(['1', '2']), position=39, length=1
+    )
     import_diposit = fields.Float(position=40, length=11)
-    primera_vivenda = fields.Select(choices=('S', 'N'), position=41, length=1)
+    primera_vivenda = fields.String(
+        validate=OneOf(['S', 'N']), position=41, length=1
+    )
     telegest_actiu = fields.String(position=42, length=2)
     any_sub = fields.Integer(position=43, length=4)
     trimestre_sub = fields.Integer(position=44, length=1)
