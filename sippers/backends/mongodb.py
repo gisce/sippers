@@ -29,11 +29,15 @@ class MongoDBBackend(BaseBackend):
             self.insert_ps(ps.backend_data)
         measures = document.get('measures')
         post_measures = []
+        measure_cnmc = document.get('measure_cnmc')
         if measures:
             for measure in measures:
                 measure.backend = self
                 post_measures.append(measure.backend_data)
             self.insert_measures(post_measures)
+        elif measure_cnmc:
+            measure_cnmc.backend = self
+            self.insert_cnmc_measure(measure_cnmc.backend_data)
 
     def get(self, collection, filters, fields=None):
         return [x for x in self.db[collection].find(filters, fields=fields)]
@@ -53,6 +57,18 @@ class MongoDBBackend(BaseBackend):
         )
         oids.extend(self.db[collection].insert(values))
         return oids
+
+    def insert_cnmc_measure(self, value):
+        '''cnmc measures come a measure per line,
+        cannot replace the whole block as in insert_measures'''
+        collection = self.measures_collection
+        self.db[collection].remove(
+            {"name" : value["name"],
+             "data_final": value["data_final"]
+             }
+        )
+        oid = self.db[collection].insert(value)
+        return oid
 
     def disconnect(self):
         self.connection.disconnect()
