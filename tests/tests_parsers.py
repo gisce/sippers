@@ -11,7 +11,9 @@ class TestRegisteredClasses(SipsTestCaseBase):
             'sippers.parsers.endesa.Endesa',
             'sippers.parsers.endesa.EndesaCons',
             'sippers.parsers.hidrocantabrico.Hidrocantabrico',
-            'sippers.parsers.hidrocantabrico.HidrocantabricoMeasures'
+            'sippers.parsers.hidrocantabrico.HidrocantabricoMeasures',
+            'sippers.parsers.cnmc.Cnmc',
+            'sippers.parsers.cnmc.CnmcCons',
         ])
 
 
