@@ -69,6 +69,17 @@ class EndesaBaseAdapter(Schema):
                     data[attr] = data[attr].replace(',', '.')
         return data
 
+    @pre_load
+    def fix_der_acces_valle(self, data):
+        der_acces_valle = data.get('der_acces_valle', '0').replace(',', '.')
+        try:
+            float(der_acces_valle)
+        except ValueError:
+            if der_acces_valle == 'N':
+                der_acces_valle = 0
+        data['der_acces_valle'] = der_acces_valle
+
+
 class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
     """Endesa SIPS Adapter.
     """
