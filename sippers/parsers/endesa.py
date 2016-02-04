@@ -27,6 +27,26 @@ class Endesa(Parser):
         self.fields = self.fields_ps
 
     def parse_line(self, line):
+        def find_pc(c, offset=0):
+            length = 5
+            min = 0
+            max = 5
+            return next((offset+i for i, j in enumerate(c[offset:])
+                         if len(j) == length and j[0].isdigit() and int(j[0]) >= min and int(j[0]) <= max), None)
+
+        def fix_addr(c, start, end):
+            return self.delimiter.join(c[:start] + [' '.join(c[start:end-1])] + c[end-1:])
+
+        addr_names = ['direccio', 'direccio_titular']
+        pc_names = ['codi_postal', 'codi_postal_titular']
+        if line.count(self.delimiter) >= len(self.schema.fields):
+            fields = self.schema.fields
+            for idx in range(len(addr_names)):
+                slinia = line.split(self.delimiter)
+                pc_index = find_pc(slinia, fields[addr_names[idx]].metadata['position'])
+                if pc_index and pc_index != fields[pc_names[idx]].metadata['position']:
+                    line = fix_addr(slinia, fields[addr_names[idx]].metadata['position'], pc_index)
+
         slinia = tuple(unicode(line.decode(self.encoding)).split(self.delimiter))
         slinia = map(lambda s: s.strip(), slinia)
         parsed = {'ps': {}, 'measures': {}, 'orig': line}
