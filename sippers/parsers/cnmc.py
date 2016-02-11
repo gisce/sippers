@@ -27,7 +27,7 @@ class Cnmc(Parser):
 
         # l'ordre dels camps segons format cnmc
         self.headers_ps = [
-                'cod_distri',
+                'codi_sifco',
                 'name',
                 'codi_postal',
                 'direccio',

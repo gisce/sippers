@@ -14,9 +14,15 @@ class CnmcSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def add_distri_description(self, data):
-        cod_distri = data.get('cod_distri')
-        if cod_distri == '059':
+        sifco = data.get('codi_sifco')
+        # cod_distri en el format de la cnmc és el codi sifco
+        # el passem al tradicional 'codigo de participante de distribuidores'
+        if sifco == '059':
+            data['cod_distri'] = '0291'
             data['distri'] = 'GRUPO ELECTRIFICACION RURAL BINEFAR'
+        if sifco == '055':
+            data['cod_distri'] = '0116'
+            data['distri'] = 'AGUAS DE BARBASTRO ELECTRICIDAD, S.A.'
         return data
 
     @pre_load
