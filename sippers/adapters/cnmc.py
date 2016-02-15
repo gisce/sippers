@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from sippers.adapters import SipsAdapter, MeasuresAdapter
 from sippers.models import SipsSchema, MeasuresSchema
 from marshmallow import pre_load, fields
