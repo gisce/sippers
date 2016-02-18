@@ -34,6 +34,10 @@ class CnmcSipsAdapter(SipsAdapter, SipsSchema):
 
         potencies = potencies_contractades.split(';')
 
+        # Si no venia cap potencia s'ha creat una llista amb un item: ['']
+        # que s'ha de treure
+        if potencies[0] == '': potencies.pop()
+
         while len(potencies) < 6:
             potencies.append('0') # omplim minim fins 6 periodes
 
