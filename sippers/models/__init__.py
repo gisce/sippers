@@ -16,10 +16,11 @@ TARIFFS = [
     '6.2',
     '6.3',
     '6.4',
-    '6.5'
+    '6.5',
+    '' # per poder-los importar si venen sense tarifa
 ]
 
-TYPE_PS = ['01', '02', '03', '04', '05']
+TYPE_PS = ['01', '02', '03', '04', '05', '']
 
 CONSUMPTION_PROFILE = ['Pa', 'Pb', 'Pc', 'Pd']
 
@@ -70,7 +71,7 @@ class SipsSchema(Schema):
     tarifa = fields.String(validate=OneOf(TARIFFS))
     des_tarifa = fields.String()
     tensio = fields.String()
-    tipo_pm = fields.String(validate=OneOf(TYPE_PS))
+    tipo_pm = fields.String(validate=OneOf(TYPE_PS), allow_none=True)
     indicatiu_icp = fields.String(validate=OneOf(['0', '1']), allow_none=True)
     perfil_consum = fields.String(
         validate=OneOf(CONSUMPTION_PROFILE), allow_none=True
