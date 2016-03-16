@@ -57,6 +57,7 @@ class SipsSchema(Schema):
     ref = fields.String()
     distri = fields.String()
     cod_distri = fields.String()
+    codi_sifco = fields.String()
     poblacio = fields.String()
     direccio = fields.String()
     codi_postal = fields.String()
