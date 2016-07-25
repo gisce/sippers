@@ -104,6 +104,13 @@ class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
         return data
 
     @pre_load
+    def adapt_der_acces_valle(self, data):
+        der_acces_valle = data.get('der_acces_valle')
+        if der_acces_valle == 'N':
+            data['der_acces_valle'] = -1
+        return data
+
+    @pre_load
     def adapt_perfil_consum(self, data):
         perfil = data.get('perfil_consum')
         if perfil:
