@@ -122,7 +122,7 @@ class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
     @pre_load
     def adapt_primera_vivenda(self, data):
         vivenda = data.get('primera_vivenda')
-        values = {'S': '1', 'N': '0'}
+        values = {'': '1', 'N': '0'}
         if vivenda and vivenda in values:
             data['primera_vivenda'] = values[vivenda]
         else:
