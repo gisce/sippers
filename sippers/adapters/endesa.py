@@ -155,6 +155,16 @@ class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
             data['persona_fj'] = None
         return data
 
+    @pre_load
+    def adapt_telegestio(self, data):
+        teleg_oper = data.get('telegestio')
+        values = {'TELEGESTION OPERATIVA': '1',
+                  'TELEGESTION NO OPERATIVA': '0'}
+        if teleg_oper and teleg_oper in values:
+            data['telegestio'] = values[teleg_oper]
+        else:
+            data['telegestio'] = None
+        return data
 
 class EndesaMeasuresAdapter(EndesaBaseAdapter, MeasuresSchema, MeasuresAdapter):
     pass
