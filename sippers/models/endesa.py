@@ -46,14 +46,14 @@ class EndesaSipsSchema(Schema):
     periodicidad_fact = fields.String(position=41)
     # salt = fields.String(position=42)
     telegestio = fields.String(position=42)
-    field43 = fields.String(position=43)
-    field44 = fields.String(position=44)
+    comercializadora = fields.String(position=43)
+    cod_comercializadora = fields.String(position=44)
     codigo_telegestion = fields.String(position=45)
     fase_equipo_medida = fields.String(position=46)
-    field47 = fields.String(position=47)
-    field48 = fields.String(position=48)
-    field49 = fields.String(position=49)
-    field50 = fields.String(position=50)
+    cod_autoconsumo = fields.String(position=47)
+    ine_municipio = fields.String(position=48)
+    ine_provincia = fields.String(position=49)
+    cod_cnmc_tarifa_atr = fields.String(position=50)
 
 
 class EndesaMeasuresSchema(Schema):
