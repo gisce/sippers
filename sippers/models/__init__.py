@@ -92,7 +92,11 @@ class SipsSchema(Schema):
     persona_fj = fields.String(validate=OneOf(['0', '1']), allow_none=True)
     primera_vivenda = fields.String(validate=OneOf(['0', '1']), allow_none=True)
     fianza = fields.Float()
-
+    data_ult_lect = fields.DateTime(allow_none=True)
+    cortes = fields.Integer(allow_none=True)
+    telegestio = fields.String(validate=OneOf(['0', '1']), allow_none=True)
+    ine_municipio = fields.String(allow_none=True)
+    ine_provincia = fields.String(allow_none=True)
 
 class MeasuresSchema(Schema):
     """Base model for measures.
