@@ -64,13 +64,17 @@ class EndesaCons(Parser):
     def parse_line(self, line):
         slinia = tuple(line.split(self.delimiter))
         slinia = map(lambda s: s.strip(), slinia)
+        codis_tarifes = slinia[len(slinia)-12 : len(slinia)]
+        slinia = slinia[:len(slinia)-12]
         start = self.measures_start
         step = self.measures_step
+        step -= 1
         parsed = {'ps': {}, 'measures': [], 'orig': line}
         c_line = slinia[start:start+step]
         all_errors = {}
         while c_line:
             c_line.insert(0, slinia[0])
+            c_line.insert(4, codis_tarifes.pop(0))
             consums = build_dict(self.headers, c_line)
             result, errors = self.adapter.load(consums)
             if errors:
