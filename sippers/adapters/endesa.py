@@ -167,4 +167,29 @@ class EndesaSipsAdapter(EndesaBaseAdapter, SipsAdapter, SipsSchema):
         return data
 
 class EndesaMeasuresAdapter(EndesaBaseAdapter, MeasuresSchema, MeasuresAdapter):
-    pass
+
+    @pre_load
+    def adapt_cod_tarifa(self, data):
+        tarifa = data.get('tarifa')
+        values = {'001': '2.0A',
+                  '003': '3.0A',
+                  '004': '2.0DHA',
+                  '005': '2.1A',
+                  '006': '2.1DHA',
+                  '007': '2.0DHS',
+                  '008': '2.1DHS',
+                  '011': '3.1A',
+                  '012': '6.1A',
+                  '013': '6.2',
+                  '014': '6.3',
+                  '015': '6.4',
+                  '016': '6.5',
+                  '017': '6.1B',
+                  }
+        if tarifa and tarifa in values:
+            data['tarifa'] = values[tarifa]
+        else:
+            data['tarifa'] = ''
+        return data
+
+EndesaMeasuresAdapter()
