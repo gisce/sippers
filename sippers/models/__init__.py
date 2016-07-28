@@ -103,7 +103,8 @@ class MeasuresSchema(Schema):
     """
     name = fields.String(required=True)
     data_final = fields.DateTime(allow_none=True)
-    real_estimada = fields.String()
+    real_estimada = fields.String(allow_none=True)
+    tarifa = fields.String(allow_none=True)
     activa_1 = fields.Integer()
     tipo_a1 = fields.String()
     activa_2 = fields.Integer()
