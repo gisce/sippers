@@ -102,6 +102,7 @@ class MeasuresSchema(Schema):
     """Base model for measures.
     """
     name = fields.String(required=True)
+    data_inicial = fields.DateTime(allow_none=True)
     data_final = fields.DateTime(allow_none=True)
     real_estimada = fields.String(allow_none=True)
     tarifa = fields.String(allow_none=True)
