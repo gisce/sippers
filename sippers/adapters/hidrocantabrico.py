@@ -62,6 +62,14 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
         return data
 
     @pre_load
+    def tipo_pm(self, data):
+        mapping = {'': '0', 'S': '1'}
+        tipo_pm = data.get('tipo_pm')
+        if tipo_pm == '':
+            data['tipo_pm'] = None
+        return data
+
+    @pre_load
     def fix_dates(self, data):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.DateTime):
