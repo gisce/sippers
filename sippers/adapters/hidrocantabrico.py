@@ -112,6 +112,7 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
         data['persona_fj'] = mapping.get(fj)
         return data
 
+HidrocantabricoSipsAdapter()
 
 class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
 
@@ -147,3 +148,5 @@ class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
         if result:
             data['name'] = result[0]['name']
         return data
+
+HidrocantabricoMeasuresAdapter()
