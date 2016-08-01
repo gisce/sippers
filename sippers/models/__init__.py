@@ -70,7 +70,7 @@ class SipsSchema(Schema):
     tarifa = fields.String(validate=OneOf(TARIFFS))
     des_tarifa = fields.String()
     tensio = fields.String()
-    tipo_pm = fields.String(validate=OneOf(TYPE_PS))
+    tipo_pm = fields.String(validate=OneOf(TYPE_PS), allow_none=True)
     indicatiu_icp = fields.String(validate=OneOf(['0', '1']), allow_none=True)
     perfil_consum = fields.String(
         validate=OneOf(CONSUMPTION_PROFILE), allow_none=True
