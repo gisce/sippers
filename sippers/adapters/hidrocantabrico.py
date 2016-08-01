@@ -74,7 +74,7 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.DateTime):
                 orig = data.get(attr)
-                if orig not in ('', '0', '00000000'):
+                if orig not in ('', '0', '00000000', '30000'):
                     data[attr] = '{}-{}-{}T00:00:00'.format(
                         orig[0:4], orig[4:6], orig[6:8]
                     )
