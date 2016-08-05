@@ -48,7 +48,7 @@ class HidrocantabricoSchema(Schema):
 
 class HidrocantabricoMeasuresSchema(Schema):
     name = fields.String(description="Suministro", position=0, length=10)
-    fecha_inicio = fields.String(description="Fecha inicio", position=1, length=8)
+    data_inicial = fields.String(description="Fecha inicio", position=1, length=8)
     data_final = fields.String(description="Fecha fin", position=2, length=8)
     tarifa = fields.String(description="Tarifa", position=3, length=5)
     dh = fields.String(description="DH", position=4, length=1)
