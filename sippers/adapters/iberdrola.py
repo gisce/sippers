@@ -115,4 +115,32 @@ class IberdrolaMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
                 data[attr] += 'T00:00:00'
         return data
 
+    @pre_load
+    def measures_w_to_kw(self, data):
+        measures = [
+            'activa_1',
+            'activa_2',
+            'activa_3',
+            'activa_4',
+            'activa_5',
+            'activa_6',
+            'reactiva_1',
+            'reactiva_2',
+            'reactiva_3',
+            'reactiva_4',
+            'reactiva_5',
+            'reactiva_6',
+            'potencia_1',
+            'potencia_2',
+            'potencia_3',
+            'potencia_4',
+            'potencia_5',
+            'potencia_6',
+        ]
+        for measure in measures:
+            m_data = data.get(measure)
+            if int(m_data) > 0:
+                data[measure] = int(m_data) / 1000
+        return data
+
 IberdrolaMeasuresAdapter()
