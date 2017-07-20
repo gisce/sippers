@@ -21,7 +21,8 @@ TARIFFS = [
 
 TYPE_PS = ['01', '02', '03', '04', '05']
 
-CONSUMPTION_PROFILE = ['Pa', 'Pb', 'Pc', 'Pd']
+CONSUMPTION_PROFILE = [u'Pa', u'Pb', u'Pc', u'Pd',
+                       'Pa', 'Pb', 'Pc', 'Pd',]
 
 # taula 64 CNMC
 TENSIO_CNMC = {
