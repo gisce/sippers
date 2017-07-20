@@ -66,6 +66,8 @@ class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
             'OT': '0',
             'PS': '0',
             'NE': '0',
+            'PF': '0',
+            'PJ': '1',
         }
         if persona and persona in persona_map:
             data['persona_fj'] = persona_map[persona]
