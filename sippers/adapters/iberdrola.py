@@ -106,6 +106,22 @@ class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
                 data['telegestio'] = '1'
         return data
 
+    @pre_load
+    def adapt_potcttada_w_to_kw(self, data):
+        measures = [
+            'pot_cont_p1',
+            'pot_cont_p2',
+            'pot_cont_p3',
+            'pot_cont_p4',
+            'pot_cont_p5',
+            'pot_cont_p6',
+        ]
+        for measure in measures:
+            m_data = data.get(measure)
+            if int(m_data) > 0:
+                data[measure] = int(m_data) / 1000
+        return data
+
 IberdrolaSipsAdapter()
 
 class IberdrolaMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
