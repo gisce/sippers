@@ -21,12 +21,18 @@ class MongoDBBackend(BaseBackend):
         self.db[self.measures_collection].ensure_index(
            "name", background=True,
         )
+        self.db['cnmc_sips'].ensure_index(
+            "cups", unique=True, background=True
+        )
+        self.db['cnmc_sips_consums'].ensure_index(
+            "cups", background=True,
+        )
 
     def insert(self, document):
         ps = document.get('ps')
         if ps:
             ps.backend = self
-            self.insert_ps(ps.backend_data)
+            self.insert_ps(ps.backend_data, collection=document.get('collection'))
         measures = document.get('measures')
         post_measures = []
         measure_cnmc = document.get('measure_cnmc')
@@ -37,16 +43,23 @@ class MongoDBBackend(BaseBackend):
             self.insert_measures(post_measures)
         elif measure_cnmc:
             measure_cnmc.backend = self
-            self.insert_cnmc_measure(measure_cnmc.backend_data)
+            self.insert_cnmc_measure(measure_cnmc.backend_data, collection=document.get('collection'))
 
     def get(self, collection, filters, fields=None):
         return [x for x in self.db[collection].find(filters, fields=fields)]
 
-    def insert_ps(self, ps):
-        collection = self.ps_collection
+    def insert_ps(self, ps, collection=None):
+        if not collection:
+            collection = self.ps_collection
+        if collection == self.ps_collection:
+            key = 'name'
+        else:
+            key = 'cups'
+
         oid = self.db[collection].update(
-            {'name': ps['name']}, ps, upsert=True
+            {key: ps[key]}, ps, upsert=True
         )
+
         return oid
 
     def insert_measures(self, values):
@@ -58,13 +71,22 @@ class MongoDBBackend(BaseBackend):
         oids.extend(self.db[collection].insert(values))
         return oids
 
-    def insert_cnmc_measure(self, value):
+    def insert_cnmc_measure(self, value, collection=None):
         '''cnmc measures come a measure per line,
         cannot replace the whole block as in insert_measures'''
+        if not collection:
+            collection = self.measures_collection
+        if collection == self.measures_collection:
+            key = 'name'
+            date_key =  'data_final'
+        else:
+            key = 'cups'
+            date_key = 'fechaFinMesConsumo'
         collection = self.measures_collection
         self.db[collection].remove(
-            {"name" : value["name"],
-             "data_final": value["data_final"]
+            {
+                key : value[key],
+                date_key: value[date_key]
              }
         )
         oid = self.db[collection].insert(value)
