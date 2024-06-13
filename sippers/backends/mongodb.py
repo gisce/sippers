@@ -25,8 +25,12 @@ class MongoDBBackend(BaseBackend):
             "cups", unique=True, background=True
         )
         self.db['cnmc_sips_consums'].ensure_index(
-            "cups", background=True,
+            [
+                ("cups", pymongo.ASCENDING),
+                ("fechaFinMesConsumo", pymongo.DESCENDING)
+            ], background=True,
         )
+
 
     def insert(self, document):
         ps = document.get('ps')
@@ -82,14 +86,13 @@ class MongoDBBackend(BaseBackend):
         else:
             key = 'cups'
             date_key = 'fechaFinMesConsumo'
-        collection = self.measures_collection
-        self.db[collection].remove(
+
+        oid = self.db[collection].update(
             {
-                key : value[key],
+                key: value[key],
                 date_key: value[date_key]
-             }
+            }, value, upsert=True
         )
-        oid = self.db[collection].insert(value)
         return oid
 
     def disconnect(self):
