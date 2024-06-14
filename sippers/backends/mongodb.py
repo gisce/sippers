@@ -78,25 +78,13 @@ class MongoDBBackend(BaseBackend):
     def insert_cnmc_measure(self, value, collection=None):
         '''cnmc measures come a measure per line,
         cannot replace the whole block as in insert_measures'''
-        if not collection:
-            collection = self.measures_collection
-        if collection == self.measures_collection:
-            key = 'name'
-            date_key =  'data_final'
-        else:
-            key = 'cups'
-            date_key = 'fechaFinMesConsumo'
 
-        oid = self.db[collection].update(
-            {
-                key: value[key],
-                date_key: value[date_key]
-            }, value, upsert=True
-        )
+        oid = self.db[collection].insert(value)
+
         return oid
 
     def disconnect(self):
-        self.connection.disconnect()
+        self.connection.close()
 
     def __enter__(self):
         return self

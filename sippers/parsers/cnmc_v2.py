@@ -20,7 +20,7 @@ class CnmcV2(Parser):
     # El diccionari el podem utilitzar per passar-li al
     # self.adapter.load igual que el resultat de l'esquema
 
-    pattern = '[0-9]{6}_SIPS2_PS_ELECTRICIDAD_[a-z]*\.csv'
+    pattern = '[0-9]{6}_SIPS2_PS_ELECTRICIDAD_[a-z]*_?[a-z]*\.csv'
     encoding = "UTF-8"
     _collection = 'cnmc_sips'
 
@@ -111,9 +111,8 @@ class CnmcV2Cons(Parser):
 
     # En el cas de les mesures, usem Schema per mantenir el format i
     # perque no hi trobarem mes comes que les delimiters
-    pattern = '[0-9]{6}_SIPS2_CONSUMOS_ELECTRICIDAD_[a-z]*\.csv'
+    pattern = '[0-9]{6}_SIPS2_CONSUMOS_ELECTRICIDAD_[a-z]*_?[a-z]*\.csv'
     encoding = "UTF-8"
-    delimiter = ','
     _collection = 'cnmc_sips_consums'
 
 
@@ -130,15 +129,18 @@ class CnmcV2Cons(Parser):
             self.headers.append(f)
 
     def parse_line(self, line):
-        slinia = tuple(line.split(self.delimiter))
-        slinia = map(lambda s: s.strip(), slinia)
+
+        l = StringIO.StringIO(line)
+        reader = csv.DictReader(l, fieldnames=self.headers, delimiter=',')
+        linia = reader.next()  # nomes n'hi ha una
+
         parsed = {'ps': {}, 'measure_cnmc': [], 'orig': line, 'collection': self._collection}
-        all_errors = {}
-        consums = build_dict(self.headers, slinia)
-        result, errors = self.adapter.load(consums)
+
+        result, errors = self.adapter.load(linia)
+
         if errors:
             logger.error(errors)
-            all_errors.update(errors)
+
         parsed['measure_cnmc'] = result
 
         return parsed, errors
