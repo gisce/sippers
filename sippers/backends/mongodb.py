@@ -31,23 +31,38 @@ class MongoDBBackend(BaseBackend):
             ], background=True,
         )
 
-
     def insert(self, document):
+        docuemnt_list = document
+        batch_insert = False
+        if isinstance(document, list):
+            document = docuemnt_list[0]
+            batch_insert = True
         ps = document.get('ps')
         if ps:
             ps.backend = self
+            if batch_insert:
+                raise Exception("Batch insert not implemented for PS")
             self.insert_ps(ps.backend_data, collection=document.get('collection'))
         measures = document.get('measures')
         post_measures = []
         measure_cnmc = document.get('measure_cnmc')
         if measures:
+            if batch_insert:
+                raise Exception("Batch insert not implemented for measures")
             for measure in measures:
                 measure.backend = self
                 post_measures.append(measure.backend_data)
             self.insert_measures(post_measures)
         elif measure_cnmc:
-            measure_cnmc.backend = self
-            self.insert_cnmc_measure(measure_cnmc.backend_data, collection=document.get('collection'))
+            if batch_insert:
+                data = []
+                for x in docuemnt_list:
+                    x.get('measure_cnmc').backend = self
+                    data.append(x.get('measure_cnmc').backend_data)
+            else:
+                measure_cnmc.backend = self
+                data = measure_cnmc.backend_data
+            self.insert_cnmc_measure(data, collection=document.get('collection'))
 
     def get(self, collection, filters, fields=None):
         return [x for x in self.db[collection].find(filters, fields=fields)]
