@@ -32,17 +32,22 @@ class MongoDBBackend(BaseBackend):
         )
 
     def insert(self, document):
-        docuemnt_list = document
         batch_insert = False
+        docuemnt_list = document
         if isinstance(document, list):
-            document = docuemnt_list[0]
+            document = document[0]
             batch_insert = True
         ps = document.get('ps')
         if ps:
-            ps.backend = self
             if batch_insert:
-                raise Exception("Batch insert not implemented for PS")
-            self.insert_ps(ps.backend_data, collection=document.get('collection'))
+                ps_data = []
+                for x in docuemnt_list:
+                    x.get('measure_cnmc').backend = self
+                    ps_data.append(x.get('measure_cnmc').backend_data)
+            else:
+                ps.backend = self
+                ps_data = ps.backend_data
+            self.insert_ps(ps_data, collection=document.get('collection'))
         measures = document.get('measures')
         post_measures = []
         measure_cnmc = document.get('measure_cnmc')
@@ -55,14 +60,14 @@ class MongoDBBackend(BaseBackend):
             self.insert_measures(post_measures)
         elif measure_cnmc:
             if batch_insert:
-                data = []
-                for x in docuemnt_list:
-                    x.get('measure_cnmc').backend = self
-                    data.append(x.get('measure_cnmc').backend_data)
+                measure_list = []
+                for doc in docuemnt_list:
+                    doc.get('measure_cnmc').backend = self
+                    measure_list.append(doc.get('measure_cnmc').backend_data)
             else:
                 measure_cnmc.backend = self
-                data = measure_cnmc.backend_data
-            self.insert_cnmc_measure(data, collection=document.get('collection'))
+                measure_list = measure_cnmc.backend_data
+            self.insert_cnmc_measure(measure_list, collection=document.get('collection'))
 
     def get(self, collection, filters, fields=None):
         return [x for x in self.db[collection].find(filters, fields=fields)]
@@ -75,9 +80,15 @@ class MongoDBBackend(BaseBackend):
         else:
             key = 'cups'
 
-        oid = self.db[collection].update(
-            {key: ps[key]}, ps, upsert=True
-        )
+        if isinstance(ps, list):
+            for doc in ps:
+                oid = self.db[collection].update(
+                    {key: doc[key]}, doc, upsert=True
+                )
+        else:
+            oid = self.db[collection].update(
+                {key: ps[key]}, ps, upsert=True
+            )
 
         return oid
 
