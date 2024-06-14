@@ -42,8 +42,8 @@ class MongoDBBackend(BaseBackend):
             if batch_insert:
                 ps_data = []
                 for x in docuemnt_list:
-                    x.get('measure_cnmc').backend = self
-                    ps_data.append(x.get('measure_cnmc').backend_data)
+                    x.get('ps').backend = self
+                    ps_data.append(x.get('ps').backend_data)
             else:
                 ps.backend = self
                 ps_data = ps.backend_data
@@ -81,6 +81,7 @@ class MongoDBBackend(BaseBackend):
             key = 'cups'
 
         if isinstance(ps, list):
+            oid = False
             for doc in ps:
                 oid = self.db[collection].update(
                     {key: doc[key]}, doc, upsert=True
