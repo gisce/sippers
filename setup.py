@@ -9,8 +9,8 @@ setup(
     license='GPLv3',
     author='GISCE-TI, S.L.',
     author_email='devel@gisce.net',
-    description='',
-    long_description='',
+    description='sippers',
+    long_description='sippers',
     entry_points='''
         [console_scripts]
         sippers=sippers.cli:sippers
