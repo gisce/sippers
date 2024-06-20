@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='sippers',
-    version='1.1.1',
+    version='2.0.0',
     packages=find_packages(),
     url='https://github.com/gisce/sippers',
     license='GPLv3',
