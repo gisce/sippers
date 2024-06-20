@@ -10,6 +10,7 @@ setup(
     author='GISCE-TI, S.L.',
     author_email='devel@gisce.net',
     description='',
+    long_description='',
     entry_points='''
         [console_scripts]
         sippers=sippers.cli:sippers
