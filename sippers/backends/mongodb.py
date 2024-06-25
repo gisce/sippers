@@ -1,4 +1,7 @@
+from __future__ import (absolute_import)
 from sippers.backends import BaseBackend, register, urlparse
+from sippers.parsers.cnmc_v2 import CnmcV2, CnmcV2Cons
+from sippers.parsers.cnmc_gas import CnmcGas, CnmcGasCons
 import pymongo
 
 
@@ -15,21 +18,19 @@ class MongoDBBackend(BaseBackend):
         self.db = self.connection[self.config['db']]
         self.ps_collection = 'giscedata_sips_ps'
         self.measures_collection = 'giscedata_sips_consums'
-        self.db[self.ps_collection].ensure_index(
-            "name", unique=True, background=True
-        )
-        self.db[self.measures_collection].ensure_index(
-           "name", background=True,
-        )
-        self.db['cnmc_sips'].ensure_index(
-            "cups", unique=True, background=True
-        )
-        self.db['cnmc_sips_consums'].ensure_index(
-            [
-                ("cups", pymongo.ASCENDING),
-                ("fechaFinMesConsumo", pymongo.DESCENDING)
-            ], background=True,
-        )
+        self.index_tables()
+
+    def index_tables(self):
+        models = [CnmcV2, CnmcV2Cons, CnmcGas, CnmcGasCons]
+        sips_table =[
+            [self.ps_collection, 'name', True], [self.measures_collection, 'name', False]]
+        for model in models:
+            sips_table.append([model.collection, model.collection_index, model.index_unic])
+
+        for table in sips_table:
+            self.db[table[0]].ensure_index(
+                table[1], unique=table[2], background=True
+            )
 
     def insert(self, document):
         batch_insert = False

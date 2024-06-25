@@ -8,10 +8,10 @@ import pymongo
 from sippers import logger
 from sippers.utils import build_dict
 from sippers.parsers.parser import Parser, register
-from sippers.adapters.cnmc_v2 import CnmcV2SipsAdapter, CnmcV2MeasuresAdapter
-from sippers.models.cnmc_v2 import CnmcV2MeasuresSchema
+from sippers.adapters.cnmc_gas import CnmcGasSipsAdapter, CnmcGasMeasuresAdapter
+from sippers.models.cnmc_gas import CnmcGasMeasuresSchema
 
-class CnmcV2(Parser):
+class CnmcGas(Parser):
 
     # En aquest cas els llegim amb el csv.DictReader en comptes de fer-ho amb
     # un Schema de marshmallow, ja que el csv pot contenir comes dins d'un
@@ -22,9 +22,9 @@ class CnmcV2(Parser):
     # El diccionari el podem utilitzar per passar-li al
     # self.adapter.load igual que el resultat de l'esquema
 
-    pattern = '[0-9]{6}_SIPS2_PS_ELECTRICIDAD_[a-z]*_?[a-z]*\.csv'
+    pattern = '[0-9]{6}_SIPS2_PS_GAS_[a-z]*_?[a-z]*\.csv'
     encoding = "UTF-8"
-    collection = 'cnmc_sips'
+    collection = 'cnmc_sips_gas'
     collection_index = 'cups'
     index_unic = True
 
@@ -33,64 +33,62 @@ class CnmcV2(Parser):
         # l'ordre dels camps segons format cnmc
         self.headers_ps = [
             'codigoEmpresaDistribuidora',
-            'cups',
             'nombreEmpresaDistribuidora',
+            'cups',
+            'codigoProvinciaPS',
+            'desProvinciaPS',
             'codigoPostalPS',
             'municipioPS',
-            'codigoProvinciaPS',
-            'fechaAltaSuministro',
-            'codigoTarifaATREnVigor',
-            'codigoTensionV',
-            'potenciaMaximaBIEW',
-            'potenciaMaximaAPMW',
-            'codigoClasificacionPS',
-            'codigoDisponibilidadICP',
+            'desMunicipioPS',
+            'tipoViaPS',
+            'viaPS',
+            'numFincaPS',
+            'portalPS',
+            'escaleraPS',
+            'pisoPS',
+            'puertaPS',
+            'codigoPresion',
+            'codigoPeajeEnVigor',
+            'caudalMaximoDiarioEnWh',
+            'caudalHorarioEnWh',
+            'derechoTUR',
+            'fechaUltimaInspeccion',
+            'codigoResultadoInspeccion',
             'tipoPerfilConsumo',
-            'valorDerechosExtensionW',
-            'valorDerechosAccesoW',
-            'codigoPropiedadEquipoMedida',
-            'codigoPropiedadICP',
-            'potenciasContratadasEnWP1',
-            'potenciasContratadasEnWP2',
-            'potenciasContratadasEnWP3',
-            'potenciasContratadasEnWP4',
-            'potenciasContratadasEnWP5',
-            'potenciasContratadasEnWP6',
+            'codigoContador',
+            'calibreContador',
+            'tipoContador',
+            'propiedadEquipoMedida',
+            'codigoTelemedida',
             'fechaUltimoMovimientoContrato',
             'fechaUltimoCambioComercializador',
-            'fechaLimiteDerechosReconocidos',
-            'fechaUltimaLectura',
             'informacionImpagos',
-            'importeDepositoGarantiaEuros',
-            'tipoIdTitular',
+            'idTipoTitular',
+            'idTitular',
+            'nombreTitular',
+            'apellido1Titular',
+            'apellido2Titular',
+            'codigoProvinciaTitular',
+            'desProvinciaTitular',
+            'codigoPostalTitular',
+            'municipioTitular',
+            'desMunicipioTitular',
+            'tipoViaTitular',
+            'viaTitular',
+            'numFincaTitular',
+            'portalTitular',
+            'escaleraTitular',
+            'pisoTitular',
+            'puertaTitular',
             'esViviendaHabitual',
-            'codigoComercializadora',
-            'codigoTelegestion',
-            'codigoFasesEquipoMedida',
-            'codigoAutoconsumo',
-            'codigoTipoContrato',
-            'codigoPeriodicidadFacturacion',
-            'codigoBIE',
-            'fechaEmisionBIE',
-            'fechaCaducidadBIE',
-            'codigoAPM',
-            'fechaEmisionAPM',
-            'fechaCaducidadAPM',
-            'relacionTransformacionIntensidad',
-            'CNAE',
-            'codigoModoControlPotencia',
-            'potenciaCGPW',
-            'codigoDHEquipoDeMedida',
+            'cnae',
+            'tipoCorrector',
             'codigoAccesibilidadContador',
-            'codigoPSContratable',
-            'motivoEstadoNoContratable',
-            'codigoTensionMedida',
-            'codigoClaseExpediente',
-            'codigoMotivoExpediente',
-            'codigoTipoSuministro',
-            'aplicacionBonoSocial'
+            'conectadoPlantaSatelite',
+            'pctd',
+            'presionMedida'
         ]
-        self.adapter = CnmcV2SipsAdapter(strict=strict)
+        self.adapter = CnmcGasSipsAdapter(strict=strict)
 
     def parse_line(self, line):
 
@@ -109,22 +107,22 @@ class CnmcV2(Parser):
         parsed['ps'] = result
         return parsed, errors
 
-register(CnmcV2)
+register(CnmcGas)
 
-class CnmcV2Cons(Parser):
+class CnmcGasCons(Parser):
 
     # En el cas de les mesures, usem Schema per mantenir el format i
     # perque no hi trobarem mes comes que les delimiters
-    pattern = '[0-9]{6}_SIPS2_CONSUMOS_ELECTRICIDAD_[a-z]*_?[a-z]*\.csv'
+    pattern = '[0-9]{6}_SIPS2_CONSUMOS_gas_[a-z]*_?[a-z]*\.csv'
     encoding = "UTF-8"
-    collection = 'cnmc_sips_consums'
-    collection_index = [("cups", pymongo.ASCENDING),("fechaFinMesConsumo", pymongo.DESCENDING)]
+    collection = 'cnmc_sips_consums_gas'
+    collection_index = [("cups", pymongo.ASCENDING), ("fechaFinMesConsumo", pymongo.DESCENDING)]
     index_unic = False
 
 
     def __init__(self, strict=False):
-        self.schema = CnmcV2MeasuresSchema(strict=strict)
-        self.adapter = CnmcV2MeasuresAdapter(strict=strict)
+        self.schema = CnmcGasMeasuresSchema(strict=strict)
+        self.adapter = CnmcGasMeasuresAdapter(strict=strict)
         self.measures_adapter = self.adapter
         self.fields = []
         self.headers = []
@@ -151,4 +149,4 @@ class CnmcV2Cons(Parser):
 
         return parsed, errors
 
-register(CnmcV2Cons)
+register(CnmcGasCons)
