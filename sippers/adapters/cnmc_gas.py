@@ -7,13 +7,6 @@ class CnmcGasSipsAdapter(SipsAdapter, CnmcGasSipsSchema):
     '''A self.fields tenim els camps per defecte, els de SipsSchema base'''
 
     @pre_load
-    def add_distri_description(self, data):
-        cod_distri = data.get('codigoEmpresaDistribuidora')
-        if cod_distri == '059':
-            data['nombreEmpresaDistribuidora'] = 'GRUPO ELECTRIFICACION RURAL BINEFAR'
-        return data
-
-    @pre_load
     def parse_selections(self, data):
         selection_fields = [
             'propiedadEquipoMedida',
