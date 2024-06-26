@@ -20,6 +20,12 @@ class CnmcGasSipsAdapter(SipsAdapter, CnmcGasSipsSchema):
         return data
 
     @pre_load
+    def parse_propiedad_equipo_medida(self, data):
+        if data.get('propiedadEquipoMedida') and len(data.get('propiedadEquipoMedida'))==1:
+            data['propiedadEquipoMedida'] = '0' + data['propiedadEquipoMedida']
+        return data
+
+    @pre_load
     def fix_dates(self, data):
         for attr, field in self.fields.iteritems():
             if isinstance(field, fields.DateTime):
