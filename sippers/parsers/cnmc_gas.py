@@ -113,7 +113,7 @@ class CnmcGasCons(Parser):
 
     # En el cas de les mesures, usem Schema per mantenir el format i
     # perque no hi trobarem mes comes que les delimiters
-    pattern = '[0-9]{6}_SIPS2_CONSUMOS_gas_[a-z]*_?[a-z]*\.csv'
+    pattern = '[0-9]{6}_SIPS2_CONSUMOS_GAS_[a-z]*_?[a-z]*\.csv'
     encoding = "UTF-8"
     collection = 'cnmc_sips_consums_gas'
     collection_index = [("cups", pymongo.ASCENDING), ("fechaFinMesConsumo", pymongo.DESCENDING)]
