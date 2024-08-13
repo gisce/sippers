@@ -2,7 +2,7 @@
 from marshmallow import Schema, fields
 from marshmallow.validate import OneOf
 
-from sippers.utils import TAULA_PROPIEDAD_CONTADOR_CORRECTOR, TAULA_RESULTADO_INSPECCION, TAULA_PERFIL_CONSUMO, TAULA_TIPO_PEAJE, TAULA_TIPO_LECTURA
+from sippers.utils import TAULA_PROPIEDAD_CONTADOR_CORRECTOR, TAULA_RESULTADO_INSPECCION, TAULA_PERFIL_CONSUMO, TAULA_TIPO_PEAJE, TAULA_TIPO_LECTURA_GAS
 
 
 class CnmcGasSipsSchema(Schema):
@@ -76,4 +76,4 @@ class CnmcGasMeasuresSchema(Schema):
     caudaMinimoDiario = fields.String(position=7, required=False, allow_none=True)
     caudaMaximoDiario = fields.String(position=8, required=False, allow_none=True)
     porcentajeConsumoNocturno = fields.String(position=9, required=False, allow_none=True)
-    codigoTipoLectura = fields.String(validate=OneOf(TAULA_TIPO_LECTURA), position=10, required=False, allow_none=True)
+    codigoTipoLectura = fields.String(validate=OneOf(TAULA_TIPO_LECTURA_GAS), position=10, required=False, allow_none=True)
