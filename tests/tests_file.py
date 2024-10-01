@@ -3,7 +3,7 @@ import unittest
 
 from sippers.file import SipsFile, PackedSipsFile
 from sippers.utils import naturalsize
-from . import SipsTestCaseBase, get_data
+from tests import SipsTestCaseBase, get_data
 
 
 class PackedSipsFileTest(SipsTestCaseBase):

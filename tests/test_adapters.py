@@ -1,4 +1,4 @@
-from . import SipsTestCaseBase
+from tests import SipsTestCaseBase
 from sippers.file import SipsFile
 from sippers.models import Document
 from sippers.adapters import SipsAdapter, pre_insert

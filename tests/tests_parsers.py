@@ -1,19 +1,22 @@
-from . import SipsTestCaseBase
+from tests import SipsTestCaseBase
 from sippers.file import SipsFile, PackedSipsFile
 
 
 class TestRegisteredClasses(SipsTestCaseBase):
     def test_registered_class(self):
         from sippers.parsers.parser import _PARSERS
-
         self.assertItemsEqual(_PARSERS.keys(), [
-            'sippers.parsers.iberdrola.Iberdrola',
-            'sippers.parsers.endesa.Endesa',
-            'sippers.parsers.endesa.EndesaCons',
-            'sippers.parsers.hidrocantabrico.Hidrocantabrico',
-            'sippers.parsers.hidrocantabrico.HidrocantabricoMeasures',
-            'sippers.parsers.cnmc.Cnmc',
-            'sippers.parsers.cnmc.CnmcCons',
+            "sippers.parsers.cnmc.Cnmc",
+            "sippers.parsers.cnmc.CnmcCons",
+            "sippers.parsers.endesa.EndesaCons",
+            "sippers.parsers.cnmc_v2.CnmcV2Cons",
+            "sippers.parsers.hidrocantabrico.HidrocantabricoMeasures",
+            "sippers.parsers.cnmc_v2.CnmcV2",
+            "sippers.parsers.cnmc_gas.CnmcGas",
+            "sippers.parsers.iberdrola.Iberdrola",
+            "sippers.parsers.cnmc_gas.CnmcGasCons",
+            "sippers.parsers.endesa.Endesa",
+            "sippers.parsers.hidrocantabrico.Hidrocantabrico"
         ])
 
 

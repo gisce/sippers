@@ -1,4 +1,4 @@
-from . import SipsTestCaseBase
+from tests import SipsTestCaseBase
 from sippers.parsers.parser import get_parser
 from sippers.file import SipsFile, PackedSipsFile
 
