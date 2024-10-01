@@ -19,8 +19,9 @@ setup(
         'sippers': ['data/*']
     },
     install_requires=[
-        "raven",
-        "pymongo<3.0",
+        'raven<6.0.0;python_version<="2.7.18"',
+        'raven;python_version>"2.7.18"',
+        "pymongo<=3.13.0",
         "osconf",
         "marshmallow<3.0",
         "click"
