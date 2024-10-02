@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import codecs
 import unittest
 
@@ -43,7 +44,8 @@ class SipsFileTest(SipsTestCaseBase):
     def test_stats(self):
         for dso in self.SIPS_DATA:
             sips_file = self.SIPS_DATA[dso]['file']
-            line_numbers = len(open(sips_file, 'r').readlines())
+            with open(sips_file, 'rb') as sf:
+                line_numbers = len(sf.readlines())
             path = get_data(sips_file)
             sf = SipsFile(path)
             for _ in sf:
@@ -55,7 +57,7 @@ class SipsFileTest(SipsTestCaseBase):
             sf.close()
 
     def test_with_statement(self):
-        sips_file = self.SIPS_DATA.values()[0]['file']
+        sips_file = list(self.SIPS_DATA.values())[0]['file']
         path = get_data(sips_file)
         with SipsFile(path) as sf:
             for _ in sf:
@@ -69,6 +71,7 @@ class SipsFileTest(SipsTestCaseBase):
         with codecs.open(sips_file, encoding=sf.parser.encoding) as orig:
             orig_content = orig.read()
         content = ''
+        # for idx, line in list(enumerate(sf)):
         for idx, line in enumerate(sf):
             content += line['orig']
             if idx == 5:

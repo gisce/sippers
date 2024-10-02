@@ -1,14 +1,15 @@
+from __future__ import unicode_literals
 from sippers.adapters import SipsAdapter, MeasuresAdapter
 from sippers.models import SipsSchema, MeasuresSchema
 from sippers.models.iberdrola import TARIFFS_OCSUM
 from marshmallow import pre_load, fields
-
+from six import string_types
 
 class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def fix_dates(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.DateTime):
                 data[attr] += 'T00:00:00'
         return data
@@ -21,11 +22,11 @@ class IberdrolaSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def fix_floats(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.Float):
                 if not data.get(attr):
                     data[attr] = 0
-                if isinstance(data[attr], basestring):
+                if isinstance(data[attr], string_types):
                     data[attr] = data[attr].replace(',', '.')
         return data
 
@@ -72,7 +73,7 @@ class IberdrolaMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
 
     @pre_load
     def fix_dates(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.DateTime):
                 data[attr] += 'T00:00:00'
         return data

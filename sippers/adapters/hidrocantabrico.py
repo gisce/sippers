@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 
 from sippers import get_data
@@ -27,8 +28,8 @@ TARIFFS = {
 
 class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
 
-    with open(get_data('hc_poblacions.json'), 'r') as f:
-        poblacions = json.load(f, encoding="utf-8")
+    with open(get_data('hc_poblacions.json'), 'rb') as f:
+        poblacions = json.load(f)
 
     @pre_load
     def adapt_tarifa(self, data):
@@ -40,7 +41,7 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def fix_floats(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.Float):
                 if not data.get(attr):
                     data[attr] = '0'
@@ -61,7 +62,7 @@ class HidrocantabricoSipsAdapter(SipsAdapter, SipsSchema):
 
     @pre_load
     def fix_dates(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.DateTime):
                 orig = data.get(attr)
                 if orig not in ('', '0', '00000000'):
@@ -107,7 +108,7 @@ class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
 
     @pre_load
     def fix_numbers(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, (fields.Integer, fields.Float)):
                 if not data.get(attr):
                     data[attr] = 0
@@ -117,7 +118,7 @@ class HidrocantabricoMeasuresAdapter(MeasuresAdapter, MeasuresSchema):
 
     @pre_load
     def fix_dates(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.DateTime):
                 orig = data.get(attr)
                 if orig not in ('', '0', '00000000'):

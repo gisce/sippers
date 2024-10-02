@@ -1,5 +1,6 @@
 from __future__ import absolute_import
-
+from __future__ import unicode_literals
+from past.builtins import unicode
 from sippers import logger
 from sippers.utils import build_dict
 from sippers.adapters.endesa import EndesaSipsAdapter, EndesaMeasuresAdapter
@@ -27,8 +28,12 @@ class Endesa(Parser):
         self.fields = self.fields_ps
 
     def parse_line(self, line):
-        slinia = tuple(unicode(line.decode(self.encoding)).split(self.delimiter))
-        slinia = map(lambda s: s.strip(), slinia)
+        import six
+        if six.PY2:
+            slinia = tuple(unicode(line.decode(self.encoding)).split(self.delimiter))
+        else:
+            slinia = tuple(line.decode(self.encoding).split(self.delimiter))
+        slinia = list(map(lambda s: s.strip(), slinia))
         parsed = {'ps': {}, 'measures': {}, 'orig': line}
         data = build_dict(self.headers_ps, slinia)
         result, errors = self.adapter.load(data)
@@ -62,8 +67,8 @@ class EndesaCons(Parser):
         self.measures_step = len(self.headers) - self.measures_start
 
     def parse_line(self, line):
-        slinia = tuple(line.split(self.delimiter))
-        slinia = map(lambda s: s.strip(), slinia)
+        slinia = tuple(line.decode(self.encoding).split(self.delimiter))
+        slinia = list(map(lambda s: s.strip(), slinia))
         start = self.measures_start
         step = self.measures_step
         parsed = {'ps': {}, 'measures': [], 'orig': line}
