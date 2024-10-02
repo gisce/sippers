@@ -25,7 +25,9 @@ setup(
         "pymongo<=3.13.0",
         "osconf",
         "marshmallow<3.0",
-        "click"
+        "click",
+        "six",
+        "future"
     ],
     test_suite='tests',
 )
