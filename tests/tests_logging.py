@@ -1,7 +1,11 @@
+from __future__ import unicode_literals
 import logging
 import sys
 import os
 import unittest
+import six
+if six.PY3:
+    from importlib import reload
 
 
 class OsConfLoggingTest(unittest.TestCase):
@@ -33,7 +37,16 @@ class OsConfLoggingTest(unittest.TestCase):
         from sippers import logger
 
         logger.info('Foo')
-        with open(logfile, 'r') as f:
+        with open(logfile, 'rb') as f:
             logcontent = f.read()
-        self.assertRegexpMatches(logcontent, "\[[0-9]{4}-[0-9]{2}-[0-9]{2} "
-        "[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}\] INFO .*: Foo")
+        import six
+        if six.PY2:
+            self.assertRegexpMatches(
+                logcontent,
+                b"\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}\] INFO .*: Foo"
+            )
+        else:
+            self.assertRegex(
+                logcontent,
+                b"\[[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3}\] INFO .*: Foo"
+            )

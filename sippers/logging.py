@@ -11,12 +11,14 @@
         logger.info('Info message')
 """
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import logging
 
 from raven import Client as SentryClient
 from raven.handlers.logging import SentryHandler
 from sippers import VERSION
+from six import string_types
 
 LOG_FORMAT = '[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
 
@@ -35,8 +37,9 @@ def setup_logging(level=None, logfile=None):
     stream.setFormatter(logging.Formatter(LOG_FORMAT))
 
     logger = logging.getLogger('sippers')
-    del logger.handlers[:]
-    logger.addHandler(stream)
+    for _h in logger.handlers[:]:
+        _h.close()
+        logger.removeHandler(_h)
 
     if logfile:
         hdlr = logging.FileHandler(logfile)
@@ -49,7 +52,7 @@ def setup_logging(level=None, logfile=None):
     sentry_handler = SentryHandler(sentry, level=logging.ERROR)
     logger.addHandler(sentry_handler)
 
-    if isinstance(level, basestring):
+    if isinstance(level, string_types):
         level = getattr(logging, level.upper(), None)
 
     if level is None:

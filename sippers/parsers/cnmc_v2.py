@@ -1,7 +1,8 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import csv
-import StringIO
+from io import StringIO
 
 import pymongo
 
@@ -97,9 +98,9 @@ class CnmcV2(Parser):
         # passar previament la linia pel csv reader
         # per que agafi be els camps tot i les comes dins del camp direccio
         # per fer-ho cal passar-la a StringIO
-        l = StringIO.StringIO(line)
-        reader = csv.DictReader(l, fieldnames=self.headers_ps, delimiter=',')
-        linia = reader.next() # nomes n'hi ha una
+        _l = StringIO(line)
+        reader = csv.DictReader(_l, fieldnames=self.headers_ps, delimiter=',')
+        linia = next(reader)  # nomes n'hi ha una
 
         parsed = {'ps': {}, 'orig': line, 'collection': self.collection}
         result, errors = self.adapter.load(linia)
@@ -136,9 +137,9 @@ class CnmcV2Cons(Parser):
 
     def parse_line(self, line):
 
-        l = StringIO.StringIO(line)
-        reader = csv.DictReader(l, fieldnames=self.headers, delimiter=',')
-        linia = reader.next()  # nomes n'hi ha una
+        _l = StringIO(line)
+        reader = csv.DictReader(_l, fieldnames=self.headers, delimiter=',')
+        linia = next(reader)  # nomes n'hi ha una
 
         parsed = {'ps': {}, 'measure_cnmc': [], 'orig': line, 'collection': self.collection}
 

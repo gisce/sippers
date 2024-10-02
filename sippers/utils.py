@@ -6,6 +6,7 @@
 Copyright (c) 2010 Jason Moiron and Contributors
 https://github.com/jmoiron/humanize/blob/master/humanize/filesize.py
 """
+from __future__ import unicode_literals
 
 suffixes = {
     'decimal': ('kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'),

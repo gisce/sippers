@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from datetime import datetime
 import os
 import zipfile
@@ -116,6 +117,9 @@ class PackedSipsFile(object):
     def __iter__(self):
         return self
 
+    def __next__(self):
+        return self.next()
+
     def next(self):
         for filename in self.files:
             self.stats.idx_file += 1
@@ -167,7 +171,7 @@ class SipsFile(object):
         else:
             self.parser = parser
         if fd is None:
-            self.fd = open(path, 'r')
+            self.fd = open(path, 'rb')
             self.stats = SipsFileStats(os.fstat(self.fd.fileno()).st_size)
         else:
             self.fd = fd
@@ -207,6 +211,9 @@ class SipsFile(object):
 
     def __enter__(self):
         return self
+
+    def __next__(self):
+        return self.next()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
