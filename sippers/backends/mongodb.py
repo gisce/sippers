@@ -28,9 +28,12 @@ class MongoDBBackend(BaseBackend):
             sips_table.append([model.collection, model.collection_index, model.index_unic])
 
         for table in sips_table:
-            self.db[table[0]].ensure_index(
-                table[1], unique=table[2], background=True
-            )
+            try:
+                self.db[table[0]].ensure_index(
+                    table[1], unique=table[2], background=True
+                )
+            except Exception as e:
+                print e
 
     def insert(self, document):
         batch_insert = False
