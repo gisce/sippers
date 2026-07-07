@@ -24,7 +24,7 @@ class CnmcV3(Parser):
 
     pattern = '[0-9]{6}_SIPS2026_PS_ELECTRICIDAD_[a-z]*_?[a-z]*\.csv'
     encoding = "UTF-8"
-    collection = 'cnmc_sips_v4'
+    collection = 'cnmc_sips'
     collection_index = 'cups'
     index_unic = True
 
@@ -163,7 +163,7 @@ class CnmcV3Cons(Parser):
     # perque no hi trobarem mes comes que les delimiters
     pattern = '[0-9]{6}_SIPS2026_CONSUMOS_ELECTRICIDAD_[a-z]*_?[a-z]*\.csv'
     encoding = "UTF-8"
-    collection = 'cnmc_sips_consums_v4'
+    collection = 'cnmc_sips_consums'
     collection_index = [("cups", pymongo.ASCENDING),("fechaFinMesConsumo", pymongo.DESCENDING)]
     index_unic = False
 
