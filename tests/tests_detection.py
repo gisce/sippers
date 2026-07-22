@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from tests import SipsTestCaseBase
 from sippers.parsers.parser import get_parser
 from sippers.file import SipsFile, PackedSipsFile
@@ -19,7 +20,7 @@ class TestSipsDetection(SipsTestCaseBase):
             sips_file = self.SIPS_DATA[dso]['file']
             parser = get_parser(sips_file)
             path = '.'.join([parser.__module__, parser.__name__])
-            self.assertEquals(
+            self.assertEqual(
                 COMPANY_PARSERS[dso],
                 path
             )
@@ -30,7 +31,7 @@ class TestSipsDetection(SipsTestCaseBase):
             sips = SipsFile(sips_file)
             parser = sips.parser.__class__
             path = '.'.join([parser.__module__, parser.__name__])
-            self.assertEquals(
+            self.assertEqual(
                 COMPANY_PARSERS[dso],
                 path
             )
@@ -40,7 +41,7 @@ class TestSipsDetection(SipsTestCaseBase):
             sips = PackedSipsFile(sips_file)
             parser = sips.parser.__class__
             path = '.'.join([parser.__module__, parser.__name__])
-            self.assertEquals(
+            self.assertEqual(
                 COMPANY_PARSERS[dso],
                 path
             )

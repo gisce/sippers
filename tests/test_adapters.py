@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from tests import SipsTestCaseBase
 from sippers.file import SipsFile
 from sippers.models import Document

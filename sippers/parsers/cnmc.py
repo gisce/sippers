@@ -1,7 +1,8 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import csv
-import StringIO
+from io import BytesIO, StringIO
 
 from sippers import logger
 from sippers.utils import build_dict
@@ -64,9 +65,9 @@ class Cnmc(Parser):
         # passar previament la linia pel csv reader
         # per que agafi be els camps tot i les comes dins del camp direccio
         # per fer-ho cal passar-la a StringIO
-        l = StringIO.StringIO(line)
-        reader = csv.DictReader(l, fieldnames=self.headers_ps, delimiter=',')
-        linia = reader.next() # nomes n'hi ha una
+        _l = StringIO(line)
+        reader = csv.DictReader(_l, fieldnames=self.headers_ps, delimiter=',')
+        linia = next(reader)  # nomes n'hi ha una
 
         parsed = {'ps': {}, 'orig': line}
         result, errors = self.adapter.load(linia)
@@ -84,7 +85,7 @@ class CnmcCons(Parser):
     # perque no hi trobarem mes comes que les delimiters
     pattern = '[0-9]{4}-[0-9]{2}-[0-9]{2}_electricidad_consumos.csv'
     encoding = "UTF-8"
-    delimiter = ','
+    delimiter = b','
 
     def __init__(self, strict=False):
         self.schema = CnmcMeasuresSchema(strict=strict)
@@ -92,15 +93,14 @@ class CnmcCons(Parser):
         self.measures_adapter = self.adapter
         self.fields = []
         self.headers = []
-        for f in sorted(self.schema.fields,
-                key=lambda f: self.schema.fields[f].metadata['position']):
+        for f in list(sorted(self.schema.fields, key=lambda f: self.schema.fields[f].metadata['position'])):
             field = self.schema.fields[f]
             self.fields.append((f, field.metadata))
             self.headers.append(f)
 
     def parse_line(self, line):
         slinia = tuple(line.split(self.delimiter))
-        slinia = map(lambda s: s.strip(), slinia)
+        slinia = list(map(lambda s: s.strip(), slinia))
         parsed = {'ps': {}, 'measure_cnmc': [], 'orig': line}
         all_errors = {}
         consums = build_dict(self.headers, slinia)

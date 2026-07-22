@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from marshmallow import Schema, post_load
 from marshmallow.decorators import tag_processor
 from sippers.models import Document

@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 
 from osconf import config_from_environment
@@ -6,7 +7,7 @@ from osconf import config_from_environment
 try:
     VERSION = __import__('pkg_resources') \
         .get_distribution(__name__).version
-except Exception, e:
+except Exception as e:
     VERSION = 'unknown'
 
 

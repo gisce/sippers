@@ -1,8 +1,9 @@
+from __future__ import unicode_literals
 from sippers import logger
 from sippers.adapters import SipsAdapter, MeasuresAdapter
 from sippers.models import SipsSchema, MeasuresSchema, TARIFFS as BASE_TARIFFS
 from marshmallow import Schema, fields, pre_load
-
+from six import string_types
 
 TARIFFS = {
     '20A': '2.0A',
@@ -36,7 +37,7 @@ class EndesaBaseAdapter(Schema):
         With this all ``fields.DateTime`` fields are caugth and parsed to a
         correct format ``YYYY-MM-DDT00:00:00``.
         """
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.DateTime):
                 orig = data.get(attr)
                 if orig and orig not in ('0', '00000000'):
@@ -49,7 +50,7 @@ class EndesaBaseAdapter(Schema):
 
     @pre_load
     def fix_numbers(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.Integer):
                 if not data.get(attr):
                     data[attr] = 0
@@ -61,11 +62,11 @@ class EndesaBaseAdapter(Schema):
 
         Replace ``,`` to ``.``
         """
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.Float):
                 if not data.get(attr):
                     data[attr] = 0
-                if isinstance(data[attr], basestring):
+                if isinstance(data[attr], string_types):
                     data[attr] = data[attr].replace(',', '.')
         return data
 

@@ -1,7 +1,8 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import csv
-import StringIO
+from io import StringIO
 
 import pymongo
 
@@ -95,9 +96,9 @@ class CnmcGas(Parser):
         # passar previament la linia pel csv reader
         # per que agafi be els camps tot i les comes dins del camp direccio
         # per fer-ho cal passar-la a StringIO
-        l = StringIO.StringIO(line)
-        reader = csv.DictReader(l, fieldnames=self.headers_ps, delimiter=',')
-        linia = reader.next() # nomes n'hi ha una
+        _l = StringIO(line)
+        reader = csv.DictReader(_l, fieldnames=self.headers_ps, delimiter=',')
+        linia = next(reader)  # nomes n'hi ha una
 
         parsed = {'ps': {}, 'orig': line, 'collection': self.collection}
         result, errors = self.adapter.load(linia)
@@ -126,17 +127,16 @@ class CnmcGasCons(Parser):
         self.measures_adapter = self.adapter
         self.fields = []
         self.headers = []
-        for f in sorted(self.schema.fields,
-                key=lambda f: self.schema.fields[f].metadata['position']):
+        for f in sorted(self.schema.fields, key=lambda f: self.schema.fields[f].metadata['position']):
             field = self.schema.fields[f]
             self.fields.append((f, field.metadata))
             self.headers.append(f)
 
     def parse_line(self, line):
 
-        l = StringIO.StringIO(line)
-        reader = csv.DictReader(l, fieldnames=self.headers, delimiter=',')
-        linia = reader.next()  # nomes n'hi ha una
+        _l = StringIO(line)
+        reader = csv.DictReader(_l, fieldnames=self.headers, delimiter=',')
+        linia = next(reader)  # nomes n'hi ha una
 
         parsed = {'ps': {}, 'measure_cnmc': [], 'orig': line, 'collection': self.collection}
 

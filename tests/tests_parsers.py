@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from tests import SipsTestCaseBase
 from sippers.file import SipsFile, PackedSipsFile
 
@@ -5,7 +6,8 @@ from sippers.file import SipsFile, PackedSipsFile
 class TestRegisteredClasses(SipsTestCaseBase):
     def test_registered_class(self):
         from sippers.parsers.parser import _PARSERS
-        self.assertItemsEqual(_PARSERS.keys(), [
+        self.maxDiff = None
+        self.assertEqual(list(sorted(list(_PARSERS.keys()))), list(sorted([
             "sippers.parsers.cnmc.Cnmc",
             "sippers.parsers.cnmc.CnmcCons",
             "sippers.parsers.endesa.EndesaCons",
@@ -17,7 +19,7 @@ class TestRegisteredClasses(SipsTestCaseBase):
             "sippers.parsers.cnmc_gas.CnmcGasCons",
             "sippers.parsers.endesa.Endesa",
             "sippers.parsers.hidrocantabrico.Hidrocantabrico"
-        ])
+        ])))
 
 
 class TestParser(SipsTestCaseBase):
@@ -25,7 +27,8 @@ class TestParser(SipsTestCaseBase):
         for dso in self.SIPS_DATA:
             sips_file = self.SIPS_DATA[dso]['file']
             lines = []
-            line_numbers = len(open(sips_file, 'r').readlines())
+            with open(sips_file, 'rb') as _f:
+                line_numbers = len(_f.readlines())
             with SipsFile(sips_file, strict=True) as sf:
                 for line in sf:
                     self.assertIn('ps', line)

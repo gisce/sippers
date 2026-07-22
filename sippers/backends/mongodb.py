@@ -1,4 +1,5 @@
 from __future__ import (absolute_import)
+from __future__ import unicode_literals
 from sippers.backends import BaseBackend, register, urlparse
 from sippers.parsers.cnmc_v2 import CnmcV2, CnmcV2Cons
 from sippers.parsers.cnmc_gas import CnmcGas, CnmcGasCons

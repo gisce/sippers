@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from sippers.adapters import SipsAdapter, MeasuresAdapter
 from sippers.models.cnmc_gas import CnmcGasSipsSchema, CnmcGasMeasuresSchema
 from marshmallow import pre_load, fields
@@ -27,7 +28,7 @@ class CnmcGasSipsAdapter(SipsAdapter, CnmcGasSipsSchema):
 
     @pre_load
     def fix_dates(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.DateTime):
                 # si ve alguna data, assumim que ve correcta
                 if data[attr] == u'':
@@ -51,7 +52,7 @@ class CnmcGasMeasuresAdapter(MeasuresAdapter, CnmcGasMeasuresSchema):
 
     @pre_load
     def fix_dates(self, data):
-        for attr, field in self.fields.iteritems():
+        for attr, field in self.fields.items():
             if isinstance(field, fields.DateTime):
                 # si ve alguna data, assumim que ve correcta
                 if data[attr] == u'':

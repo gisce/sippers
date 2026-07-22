@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 import zipfile
 
 import click
@@ -23,13 +25,13 @@ def import_file(file, backend):
             with PackedSipsFile(file) as psf:
                 pstats = psf.stats
                 for sips_file in psf:
-                    print sips_file.path
+                    print(sips_file.path)
                     stats = sips_file.stats
                     for line in sips_file:
                         if not line:
                             continue
                         bnd.insert(line)
-                        print pstats.progress, stats.progress, stats.elapsed_time, stats.speed
+                        print(pstats.progress, stats.progress, stats.elapsed_time, stats.speed)
         else:
             with SipsFile(file) as sips_file:
                 stats = sips_file.stats
@@ -37,7 +39,7 @@ def import_file(file, backend):
                     if not line:
                         continue
                     bnd.insert(line)
-                    print stats.progress, stats.elapsed_time, stats.speed
+                    print(stats.progress, stats.elapsed_time, stats.speed)
 
 
 

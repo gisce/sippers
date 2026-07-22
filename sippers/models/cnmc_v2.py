@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from marshmallow import Schema, fields
 from sippers.utils import TABLA_6, TABLA_9, TABLA_17, TABLA_30, TABLA_32, TABLA_35, TABLA_62, TABLA_64, TABLA_108, TABLA_111
 from marshmallow.validate import OneOf

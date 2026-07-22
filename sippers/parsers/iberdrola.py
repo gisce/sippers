@@ -1,5 +1,6 @@
 from __future__ import absolute_import
-
+from __future__ import unicode_literals
+from past.builtins import unicode
 from sippers import logger
 from sippers.utils import build_dict
 from sippers.parsers.parser import Parser, register
@@ -62,7 +63,7 @@ class Iberdrola(Parser):
 
     def parse_ps(self, line):
         slinia = tuple(self.slices(unicode(line), self.slices_ps))
-        slinia = map(lambda s: s.strip(), slinia)
+        slinia = list(map(lambda s: s.strip(), slinia))
         pslist = slinia[0:len(self.fields_ps)]
         # Llista dels valors del tros que agafem dins dels sips
         data = build_dict(self.headers_ps, pslist)
@@ -95,7 +96,11 @@ class Iberdrola(Parser):
         return measures, all_errors
 
     def parse_line(self, line):
-        line = unicode(line.decode(self.encoding))
+        import six
+        if six.PY2:
+            line = unicode(line.decode(self.encoding))
+        else:
+            line = line.decode(self.encoding)
         all_errors = {}
         ps, ps_errors = self.parse_ps(line)
         measures, measures_errors = self.parse_measures(line)
