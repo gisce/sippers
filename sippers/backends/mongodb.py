@@ -111,19 +111,22 @@ class MongoDBBackend(BaseBackend):
         cannot replace the whole block as in insert_measures'''
         key = 'cups'
         key2 = 'fechaFinMesConsumo'
+        oids = []
 
         if isinstance(mesures, list):
             oid = False
             for doc in mesures:
-                oid = self.db[collection].update(
-                    {key: doc[key], key2: doc[key2]}, doc, upsert=True
+                self.db[collection].remove(
+                    {key: doc[key], key2: doc[key2]}
                 )
+                oids.extend(self.db[collection].insert(doc))
         else:
-            oid = self.db[collection].update(
-                {key: mesures[key], key2: mesures[key2]}, mesures, upsert=True
+            self.db[collection].remove(
+                {key: mesures[key], key2: mesures[key2]}
             )
+            oids.extend(self.db[collection].insert(mesures))
 
-        return oid
+        return oids
 
     def disconnect(self):
         self.connection.close()
