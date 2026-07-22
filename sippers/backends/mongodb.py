@@ -119,12 +119,12 @@ class MongoDBBackend(BaseBackend):
                 self.db[collection].remove(
                     {key: doc[key], key2: doc[key2]}
                 )
-                oids.extend(self.db[collection].insert(doc))
+                oids.append(self.db[collection].insert(doc))
         else:
             self.db[collection].remove(
                 {key: mesures[key], key2: mesures[key2]}
             )
-            oids.extend(self.db[collection].insert(mesures))
+            oids.append(self.db[collection].insert(mesures))
 
         return oids
 
