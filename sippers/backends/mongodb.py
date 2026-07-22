@@ -106,13 +106,27 @@ class MongoDBBackend(BaseBackend):
         oids.extend(self.db[collection].insert(values))
         return oids
 
-    def insert_cnmc_measure(self, value, collection=None):
+    def insert_cnmc_measure(self, mesures, collection=None):
         '''cnmc measures come a measure per line,
         cannot replace the whole block as in insert_measures'''
+        key = 'cups'
+        key2 = 'fechaFinMesConsumo'
+        oids = []
 
-        oid = self.db[collection].insert(value)
+        if isinstance(mesures, list):
+            oid = False
+            for doc in mesures:
+                self.db[collection].remove(
+                    {key: doc[key], key2: doc[key2]}
+                )
+                oids.append(self.db[collection].insert(doc))
+        else:
+            self.db[collection].remove(
+                {key: mesures[key], key2: mesures[key2]}
+            )
+            oids.append(self.db[collection].insert(mesures))
 
-        return oid
+        return oids
 
     def disconnect(self):
         self.connection.close()
