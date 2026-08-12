@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from marshmallow import Schema, fields
-from sippers.utils import TABLA_6, TABLA_9, TABLA_12, TABLA_3, TABLA_17, TABLA_26, TABLA_30, TABLA_32, TABLA_35, TABLA_62, TABLA_64, TABLA_108, TABLA_111
+from sippers.utils import TABLA_6, TABLA_9, TABLA_12, TABLA_3, TABLA_17, TABLA_26, TABLA_30, TABLA_32, TABLA_35, TABLA_62, TABLA_64, TABLA_108, TABLA_115
 from marshmallow.validate import OneOf
 
 
@@ -64,7 +64,7 @@ class CnmcV3SipsSchema(Schema):
     BandaPS = fields.String(allow_none=True)
     PaisPS = fields.String(allow_none=True)
     desProvinciaPS = fields.String(allow_none=True)
-    codigoMunicipioPS
+    codigoMunicipioPS = fields.String(allow_none=True)
     desMunicipioPS = fields.String(allow_none=True)
     PoblacionPS = fields.String(allow_none=True)
     desPoblacionPS = fields.String(allow_none=True)
@@ -123,18 +123,18 @@ class CnmcV3MeasuresSchema(Schema):
     consumoEnergiaActivaEnWhP4 = fields.String(position=7)
     consumoEnergiaActivaEnWhP5 = fields.String(position=8)
     consumoEnergiaActivaEnWhP6 = fields.String(position=9)
-    consumoEnergíaReactivaInductivaEnVArhP1 = fields.String(position=10)
-    consumoEnergíaReactivaInductivaEnVArhP2 = fields.String(position=11)
-    consumoEnergíaReactivaInductivaEnVArhP3 = fields.String(position=12)
-    consumoEnergíaReactivaInductivaEnVArhP4 = fields.String(position=13)
-    consumoEnergíaReactivaInductivaEnVArhP5 = fields.String(position=14)
-    consumoEnergíaReactivaInductivaEnVArhP6 = fields.String(position=15)
-    consumoEnergíaReactivaCapacitivaEnVArhP1 = fields.String(position=16)
-    consumoEnergíaReactivaCapacitivaEnVArhP2 = fields.String(position=17)
-    consumoEnergíaReactivaCapacitivaEnVArhP3 = fields.String(position=18)
-    consumoEnergíaReactivaCapacitivaEnVArhP4 = fields.String(position=19)
-    consumoEnergíaReactivaCapacitivaEnVArhP5 = fields.String(position=20)
-    consumoEnergíaReactivaCapacitivaEnVArhP6 = fields.String(position=21)
+    consumoEnergiaReactivaInductivaEnVArhP1 = fields.String(position=10)
+    consumoEnergiaReactivaInductivaEnVArhP2 = fields.String(position=11)
+    consumoEnergiaReactivaInductivaEnVArhP3 = fields.String(position=12)
+    consumoEnergiaReactivaInductivaEnVArhP4 = fields.String(position=13)
+    consumoEnergiaReactivaInductivaEnVArhP5 = fields.String(position=14)
+    consumoEnergiaReactivaInductivaEnVArhP6 = fields.String(position=15)
+    consumoEnergiaReactivaCapacitivaEnVArhP1 = fields.String(position=16)
+    consumoEnergiaReactivaCapacitivaEnVArhP2 = fields.String(position=17)
+    consumoEnergiaReactivaCapacitivaEnVArhP3 = fields.String(position=18)
+    consumoEnergiaReactivaCapacitivaEnVArhP4 = fields.String(position=19)
+    consumoEnergiaReactivaCapacitivaEnVArhP5 = fields.String(position=20)
+    consumoEnergiaReactivaCapacitivaEnVArhP6 = fields.String(position=21)
     fechaFinMesConsumo = fields.DateTime(required=True, position=2, allow_none=False)
     fechaInicioMesConsumo = fields.DateTime(required=True, position=1, allow_none=False)
     potenciaDemandadaEnWP1 = fields.String(position=22)
